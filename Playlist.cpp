@@ -3,12 +3,11 @@
 #include <algorithm>
 
 PlayCountNode::PlayCountNode(int count, Song* song) : playCount(count), songPtr(song), left(nullptr), right(nullptr) {}
-SongNodeList::SongNodeList(Song* song) : songPtr(song), next(nullptr) {}
+SongNodeList::SongNodeList(Song* song) : songPtr(song), next(nullptr), prev(nullptr) {}
 
-Playlist::Playlist(int id) : playlistId(id), songsByIdRoot(nullptr), songsByPlayCountRoot(nullptr), songListHead(nullptr) {}
+Playlist::Playlist(int id) : playlistId(id), songsByPlayCountRoot(nullptr), songListHead(nullptr), songListTail(nullptr) {}
 
 Playlist::~Playlist() {
-    destroyIdTree(songsByIdRoot);
     destroyPlayCountTree(songsByPlayCountRoot);
     destroyList(songListHead);
 }
@@ -18,28 +17,25 @@ int Playlist::getPlaylistId() const {
 }
 
 void Playlist::addSong(Song* song) {
-    if (!searchById(songsByIdRoot, song->getSongId())) {
-        songsByIdRoot = insertById(songsByIdRoot, song);
-        songsByPlayCountRoot = insertByPlayCount(songsByPlayCountRoot, song);
-        appendToList(song);
-    }
+    appendToList(song);
+    SongNodeList* newNode = songListTail;
+    songsByIdTree.addSong(song, newNode);
 }
 
 void Playlist::removeSong(int songId) {
-    songsByIdRoot = deleteById(songsByIdRoot, songId);
+    songsByIdTree.removeSong(songId);
     removeFromList(songId);
 }
 
 void Playlist::playSong(int songId) {
-    AVLNodeSong* node = searchById(songsByIdRoot, songId);
-    if (node && node->song_ptr) {
-        node->song_ptr->increaseCountPlayed();
+    Song* song = songsByIdTree.getSongById(songId);
+    if (song) {
+        song->increaseCountPlayed();
     }
 }
 
 Song* Playlist::getSongById(int songId) const {
-    AVLNodeSong* node = searchById(songsByIdRoot, songId);
-    return node ? node->song_ptr : nullptr;
+    return songsByIdTree.getSongById(songId);
 }
 
 Song** Playlist::getAllSongs() const {
@@ -54,32 +50,15 @@ Song** Playlist::getAllSongs() const {
     return allSongs;
 }
 
-AVLNodeSong* Playlist::insertById(AVLNodeSong* root, Song* song) {
-    if (!root) return new AVLNodeSong(song->getSongId(), song);
-    if (song->getSongId() < root->songId) {
-        root->left = insertById(root->left, song);
-    } else if (song->getSongId() > root->songId) {
-        root->right = insertById(root->right, song);
+SongNodeList* Playlist::getSongNodeInList(int songId) const {
+    SongNodeList* current = songListHead;
+    while (current) {
+        if (current->songPtr->getSongId() == songId) {
+            return current;
+        }
+        current = current->next;
     }
-    return root;
-}
-
-AVLNodeSong* Playlist::searchById(AVLNodeSong* root, int songId) const {
-    if (!root || root->songId == songId) return root;
-    if (songId < root->songId) return searchById(root->left, songId);
-    else return searchById(root->right, songId);
-}
-
-AVLNodeSong* Playlist::deleteById(AVLNodeSong* root, int songId) {
     return nullptr;
-}
-
-void Playlist::destroyIdTree(AVLNodeSong* root) {
-    if (root) {
-        destroyIdTree(root->left);
-        destroyIdTree(root->right);
-        delete root;
-    }
 }
 
 PlayCountNode* Playlist::insertByPlayCount(PlayCountNode* root, Song* song) {
@@ -116,14 +95,12 @@ void Playlist::destroyPlayCountTree(PlayCountNode* root) {
 void Playlist::appendToList(Song* song) {
     SongNodeList* newNode = new SongNodeList(song);
     if (!songListHead) {
-        songListHead = newNode;
-        return;
+        songListHead = tail = newNode;
+    } else {
+        tail->next = newNode;
+        newNode->prev = tail;
+        tail = newNode;
     }
-    SongNodeList* current = songListHead;
-    while (current->next) {
-        current = current->next;
-    }
-    current->next = newNode;
 }
 
 void Playlist::removeFromList(int songId) {
@@ -131,6 +108,7 @@ void Playlist::removeFromList(int songId) {
     if (songListHead->songPtr->getSongId() == songId) {
         SongNodeList* temp = songListHead;
         songListHead = songListHead->next;
+        if (songListHead) songListHead->prev = nullptr;
         delete temp;
         return;
     }
@@ -140,3 +118,29 @@ void Playlist::removeFromList(int songId) {
     }
     if (current->next) {
         SongNodeList* temp = current->next;
+        current->next = temp->next;
+        if (temp->next) temp->next->prev = current;
+        if (temp == tail) tail = current;
+        delete temp;
+    }
+}
+
+void Playlist::destroyList(SongNodeList* head) {
+    SongNodeList* current = head;
+    while (current) {
+        SongNodeList* next = current->next;
+        delete current;
+        current = next;
+    }
+    songListHead = songListTail = nullptr;
+}
+
+int Playlist::getListSize() const {
+    int count = 0;
+    SongNodeList* current = songListHead;
+    while (current) {
+        count++;
+        current = current->next;
+    }
+    return count;
+}

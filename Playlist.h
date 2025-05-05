@@ -1,19 +1,13 @@
-#include "TreeOfAllSongs.h"
 #include "Song.h"
+#include "SongTreePlaylist.h"
 
 struct PlayCountNode;
-
-struct SongNodeList {
-    Song* songPtr;
-    SongNodeList* next;
-    SongNodeList* prev;
-    SongNodeList(Song* song);
-};
+struct SongNodeList;
 
 class Playlist {
 private:
     int playlistId;
-    AVLNodeSong* songsByIdRoot;
+    SongTreePlaylist songsByIdTree;
     PlayCountNode* songsByPlayCountRoot;
     SongNodeList* songListHead;
     SongNodeList* songListTail;
@@ -29,13 +23,9 @@ public:
     void playSong(int songId);
     Song* getSongById(int songId) const;
     Song** getAllSongs() const;
+    SongNodeList* getSongNodeInList(int songId) const;
 
 private:
-    AVLNodeSong* insertById(AVLNodeSong* root, Song* song);
-    AVLNodeSong* searchById(AVLNodeSong* root, int songId) const;
-    AVLNodeSong* deleteById(AVLNodeSong* root, int songId);
-    void destroyIdTree(AVLNodeSong* root);
-
     PlayCountNode* insertByPlayCount(PlayCountNode* root, Song* song);
     PlayCountNode* searchByPlayCount(PlayCountNode* root, int playCount, int songId) const;
     PlayCountNode* deleteByPlayCount(PlayCountNode* root, int playCount, int songId);
@@ -53,4 +43,11 @@ struct PlayCountNode {
     PlayCountNode* left;
     PlayCountNode* right;
     PlayCountNode(int count, Song* song);
+};
+
+struct SongNodeList {
+    Song* songPtr;
+    SongNodeList* next;
+    SongNodeList* prev;
+    SongNodeList(Song* song);
 };

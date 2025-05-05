@@ -1,30 +1,32 @@
-class Song{
-    int songId;
-    int countPlayed;
-    int countConnectionPlaylist;
-public:
-    Song(int songId) : songId(songId), countPlayed(0), countConnectionPlaylist(0){
-        if(songId <= 0)
-            //add throw something
-    }
-    int getSongId() const{
-        return songId;
-    }
-    int getCountPlayed() const{
-        return countPlayed;
-    }
-    int getCountPlaylist() const{
-        return countConnectionPlaylist;
-    }
-    void increaseCountPlayed(){
-        countPlayed++;
-    }
-    void increaseSongToPlaylist(){
-        countConnectionPlaylist++;
-    }
-    void decrementingSongFromPlaylist(){
-        countConnectionPlaylist--;
-    }
+#include "Song.h"
+#include <stdexcept>
 
+Song::Song(int songId) : songId(songId), countPlayed(0), countConnectionPlaylist(0) {
+    if (songId <= 0) {
+        throw std::invalid_argument("Song ID must be a positive integer.");
+    }
+}
 
-};
+int Song::getSongId() const {
+    return songId;
+}
+
+int Song::getCountPlayed() const {
+    return countPlayed;
+}
+
+int Song::getCountPlaylist() const {
+    return countConnectionPlaylist;
+}
+
+void Song::increaseCountPlayed() {
+    countPlayed++;
+}
+
+void Song::increaseSongToPlaylist() {
+    countConnectionPlaylist++;
+}
+
+void Song::decrementingSongFromPlaylist() {
+    countConnectionPlaylist--;
+}

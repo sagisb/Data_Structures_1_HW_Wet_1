@@ -13,7 +13,7 @@ private:
     SongNodeList *songListTail;
 
 public:
-    Playlist(int id);
+    Playlist(int playlistId);
     ~Playlist();
 
     int getPlaylistId() const;

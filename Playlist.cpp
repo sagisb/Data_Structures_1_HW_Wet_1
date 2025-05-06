@@ -6,7 +6,7 @@ PlayCountNode::PlayCountNode(int count, Song *song) : playCount(count), songPtr(
 
 SongNodeList::SongNodeList(Song *song) : songPtr(song), next(nullptr), prev(nullptr) {}
 
-Playlist::Playlist(int id) : playlistId(id), songsByPlayCountRoot(nullptr), songListHead(nullptr),
+Playlist::Playlist(int playlistId) : playlistId(id), songsByPlayCountRoot(nullptr), songListHead(nullptr),
                              songListTail(nullptr) {
     songsByIdTree = new SongTreePlaylist();
 }

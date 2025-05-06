@@ -8,12 +8,12 @@ class Playlist {
 private:
     int playlistId;
     SongTreePlaylist *songsByIdTree;
-    PlayCountNode *songsByPlayCountRoot;
+    PlayCountNode *AVLPlayCount;
     SongNodeList *songListHead;
     SongNodeList *songListTail;
 
 public:
-    Playlist(int playlistId);
+    Playlist(int id);
     ~Playlist();
 
     int getPlaylistId() const;
@@ -26,6 +26,13 @@ public:
     SongNodeList *getSongNodeInList(int songId) const;
 
 private:
+    int heightPlayCount(PlayCountNode* node) const;
+    int balanceFactorPlayCount(PlayCountNode* node) const;
+    void updateHeightPlayCount(PlayCountNode* node);
+    PlayCountNode* rotateLeftPlayCount(PlayCountNode* x);
+    PlayCountNode* rotateRightPlayCount(PlayCountNode* y);
+    PlayCountNode* findMinPlayCount(PlayCountNode* node) const;
+
     PlayCountNode *insertByPlayCount(PlayCountNode *root, Song *song);
     PlayCountNode *searchByPlayCount(PlayCountNode *root, int playCount, int songId) const;
     PlayCountNode *deleteByPlayCount(PlayCountNode *root, int playCount, int songId);
@@ -42,6 +49,8 @@ struct PlayCountNode {
     Song *songPtr;
     PlayCountNode *left;
     PlayCountNode *right;
+    int height;
+
     PlayCountNode(int count, Song *song);
 };
 

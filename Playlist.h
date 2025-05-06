@@ -7,7 +7,7 @@ struct SongNodeList;
 class Playlist {
 private:
     int playlistId;
-    SongTreePlaylist songsByIdTree;
+    SongTreePlaylist *songsByIdTree;
     PlayCountNode *songsByPlayCountRoot;
     SongNodeList *songListHead;
     SongNodeList *songListTail;

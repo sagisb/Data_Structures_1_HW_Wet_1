@@ -351,13 +351,3 @@ void Playlist::destroyList(SongNodeList *head_node) {
     songListHead = nullptr;
     songListTail = nullptr;
 }
-
-int Playlist::getListSize() const {
-    int count = 0;
-    SongNodeList *current = songListHead;
-    while (current) {
-        count++;
-        current = current->next;
-    }
-    return count;
-}

@@ -8,9 +8,9 @@ class Playlist {
 private:
     int playlistId;
     SongTreePlaylist songsByIdTree;
-    PlayCountNode* songsByPlayCountRoot;
-    SongNodeList* songListHead;
-    SongNodeList* songListTail;
+    PlayCountNode *songsByPlayCountRoot;
+    SongNodeList *songListHead;
+    SongNodeList *songListTail;
 
 public:
     Playlist(int id);
@@ -18,36 +18,36 @@ public:
 
     int getPlaylistId() const;
 
-    void addSong(Song* song);
+    void addSong(Song *song);
     void removeSong(int songId);
     void playSong(int songId);
-    Song* getSongById(int songId) const;
-    Song** getAllSongs() const;
-    SongNodeList* getSongNodeInList(int songId) const;
+    Song *getSongById(int songId) const;
+    Song **getAllSongs() const;
+    SongNodeList *getSongNodeInList(int songId) const;
 
 private:
-    PlayCountNode* insertByPlayCount(PlayCountNode* root, Song* song);
-    PlayCountNode* searchByPlayCount(PlayCountNode* root, int playCount, int songId) const;
-    PlayCountNode* deleteByPlayCount(PlayCountNode* root, int playCount, int songId);
-    void destroyPlayCountTree(PlayCountNode* root);
+    PlayCountNode *insertByPlayCount(PlayCountNode *root, Song *song);
+    PlayCountNode *searchByPlayCount(PlayCountNode *root, int playCount, int songId) const;
+    PlayCountNode *deleteByPlayCount(PlayCountNode *root, int playCount, int songId);
+    void destroyPlayCountTree(PlayCountNode *root);
 
-    void appendToList(Song* song);
+    void appendToList(Song *song);
     void removeFromList(int songId);
-    void destroyList(SongNodeList* head);
+    void destroyList(SongNodeList *head);
     int getListSize() const;
 };
 
 struct PlayCountNode {
     int playCount;
-    Song* songPtr;
-    PlayCountNode* left;
-    PlayCountNode* right;
-    PlayCountNode(int count, Song* song);
+    Song *songPtr;
+    PlayCountNode *left;
+    PlayCountNode *right;
+    PlayCountNode(int count, Song *song);
 };
 
 struct SongNodeList {
-    Song* songPtr;
-    SongNodeList* next;
-    SongNodeList* prev;
-    SongNodeList(Song* song);
+    Song *songPtr;
+    SongNodeList *next;
+    SongNodeList *prev;
+    SongNodeList(Song *song);
 };

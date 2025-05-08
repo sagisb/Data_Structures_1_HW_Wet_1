@@ -1,7 +1,7 @@
 #include "Song.h"
 #include <stdexcept>
 
-Song::Song(int songId) : songId(songId), countPlayed(0), countConnectionPlaylist(0) {
+Song::Song(int songId, int played = 0) : songId(songId), countPlayed(played), countConnectionPlaylist(0) {
     if (songId <= 0) {
         throw std::invalid_argument("Song ID must be a positive integer.");
     }

@@ -68,7 +68,24 @@ StatusType DSpotify::delete_playlist(int playlistId) {
 }
 
 StatusType DSpotify::add_song(int songId, int plays) {
-    return StatusType::FAILURE;
+    if (songId <= 0 || plays < 0) {
+        return StatusType::INVALID_INPUT;
+    }
+    if (songs->search(songs, songId) == nullptr) {
+        return StatusType::FAILURE;
+    }
+    try {
+        if (songs == nullptr) {
+            songs = new AVLAllSongs(songId, plays);
+        }
+        else {
+            songs = songs->insert(songs, songId);
+        }
+        return StatusType::SUCCESS;
+    }
+    catch (const std::bad_alloc &a) {
+        return StatusType::ALLOCATION_ERROR;
+    }
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {

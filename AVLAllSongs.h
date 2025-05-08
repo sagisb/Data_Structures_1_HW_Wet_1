@@ -8,7 +8,8 @@ public:
     AVLAllSongs *right;
     int height;
 
-    AVLAllSongs(int songId, Song *s);
+   // AVLAllSongs(int songId, Song *s);
+    AVLAllSongs(int songId, int played = 0);
 
     AVLAllSongs *rotateRight(AVLAllSongs *y);
     AVLAllSongs *rotateLeft(AVLAllSongs *x);

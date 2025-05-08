@@ -8,6 +8,7 @@ SongNodeList::SongNodeList(Song *s) : songPtr(s), next(nullptr), prev(nullptr) {
 
 Playlist::Playlist(int id) :
         playlistId(id),
+        numOfSongs(0),
         AVLPlayCount(nullptr),
         songListHead(nullptr),
         songListTail(nullptr) {
@@ -15,7 +16,7 @@ Playlist::Playlist(int id) :
 }
 
 Playlist::~Playlist() {
-    destroyPlayCountTree(AVLPlayCount); // שם המשתנה שונה
+    destroyPlayCountTree(AVLPlayCount);
     AVLPlayCount = nullptr;
     destroyList(songListHead);
     delete songsByIdTree;
@@ -24,6 +25,10 @@ Playlist::~Playlist() {
 
 int Playlist::getPlaylistId() const {
     return playlistId;
+}
+
+int Playlist::getNumOfSongs() const {
+    return numOfSongs;
 }
 
 int Playlist::heightPlayCount(PlayCountNode *node) const {
@@ -232,23 +237,29 @@ void Playlist::destroyPlayCountTree(PlayCountNode *root_node) {
 }
 
 void Playlist::addSong(Song *song) {
-    if (!song) { return; }
+    if (!song) {
+        return;
+    }
     appendToList(song);
     if (songListTail) {
         songsByIdTree->addSong(song, songListTail);
     }
-    AVLPlayCount = insertByPlayCount(AVLPlayCount, song); // שם המשתנה שונה
+    AVLPlayCount = insertByPlayCount(AVLPlayCount, song);
+    numOfSongs++;
 }
 
 void Playlist::removeSong(int songId) {
     Song *song_to_remove = songsByIdTree->getSongById(songId);
-    if (!song_to_remove) { return; }
+    if (!song_to_remove) {
+        return;
+    }
 
     int old_playCount = song_to_remove->getCountPlayed();
 
     songsByIdTree->removeSong(songId);
     removeFromList(songId);
-    AVLPlayCount = deleteByPlayCount(AVLPlayCount, old_playCount, songId); // שם המשתנה שונה
+    AVLPlayCount = deleteByPlayCount(AVLPlayCount, old_playCount, songId);
+    numOfSongs--;
 }
 
 void Playlist::playSong(int songId) {

@@ -61,9 +61,11 @@ AVLPlaylist *AVLPlaylist::insert(AVLPlaylist *current_root, int keyId) {
 
     if (keyId < current_root->playlistId) {
         current_root->left = insert(current_root->left, keyId);
-    } else if (keyId > current_root->playlistId) {
+    }
+    else if (keyId > current_root->playlistId) {
         current_root->right = insert(current_root->right, keyId);
-    } else {
+    }
+    else {
         return current_root;
     }
 
@@ -111,4 +113,90 @@ void AVLPlaylist::destroyAVLTree(AVLPlaylist *root) {
         destroyAVLTree(root->right);
         delete root;
     }
+}
+
+bool AVLPlaylist::playlistExists(AVLPlaylist *current_root, int searchId) const {
+    if (search(current_root, searchId) != nullptr) {
+        return true;
+    }
+    return false;
+}
+
+AVLPlaylist *AVLPlaylist::deleteNode(AVLPlaylist *current_root, int IdToDelete) {
+    if (current_root == nullptr) {
+        return current_root;
+    }
+
+    if (IdToDelete < current_root->playlistId) {
+        current_root->left = deleteNode(current_root->left, IdToDelete);
+    }
+    else if (IdToDelete > current_root->playlistId) {
+        current_root->right = deleteNode(current_root->right, IdToDelete);
+    }
+    else {
+        if (current_root->left == nullptr || current_root->right == nullptr) {
+            AVLPlaylist *temp = current_root->left ? current_root->left : current_root->right;
+
+            if (temp == nullptr) {
+                temp = current_root;
+                current_root = nullptr;
+            }
+            else {
+                AVLPlaylist *node_to_free = current_root;
+                current_root = temp;
+                temp = node_to_free;
+            }
+
+            delete temp;
+        }
+        else {
+            AVLPlaylist *successor = getMinValueNode(current_root->right);
+
+            current_root->playlistId = successor->playlistId;
+
+
+            delete current_root->playlist_ptr;
+            current_root->playlist_ptr = successor->playlist_ptr;
+            successor->playlist_ptr = nullptr;
+
+            current_root->right = deleteNode(current_root->right, successor->playlistId);
+        }
+    }
+
+    if (current_root == nullptr) {
+        return current_root;
+    }
+
+    updateHeight(current_root);
+
+    int balance = getBalanceFactor(current_root);
+
+
+    if (balance > 1 && getBalanceFactor(current_root->left) >= 0) {
+        return rotateRight(current_root);
+    }
+
+    if (balance > 1 && getBalanceFactor(current_root->left) < 0) {
+        current_root->left = rotateLeft(current_root->left);
+        return rotateRight(current_root);
+    }
+
+    if (balance < -1 && getBalanceFactor(current_root->right) <= 0) {
+        return rotateLeft(current_root);
+    }
+
+    if (balance < -1 && getBalanceFactor(current_root->right) > 0) {
+        current_root->right = rotateRight(current_root->right);
+        return rotateLeft(current_root);
+    }
+
+    return current_root;
+}
+
+AVLPlaylist* AVLPlaylist::getMinValueNode(AVLPlaylist* node) {
+    AVLPlaylist* current = node;
+    while (current && current->left != nullptr) {
+        current = current->left;
+    }
+    return current;
 }

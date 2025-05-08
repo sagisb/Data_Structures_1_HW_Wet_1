@@ -7,16 +7,19 @@ struct SongNodeList;
 class Playlist {
 private:
     int playlistId;
+    int numOfSongs;
     SongTreePlaylist *songsByIdTree;
     PlayCountNode *AVLPlayCount;
     SongNodeList *songListHead;
     SongNodeList *songListTail;
+
 
 public:
     Playlist(int id);
     ~Playlist();
 
     int getPlaylistId() const;
+    int getNumOfSongs() const;
 
     void addSong(Song *song);
     void removeSong(int songId);

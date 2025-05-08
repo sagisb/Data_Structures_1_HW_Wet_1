@@ -14,9 +14,12 @@
 #define DSPOTIFY25SPRING_WET1_H_
 
 #include "wet1util.h"
-
+#include "AVLPlaylist.h"
+#include "AVLAllSongs.h"
 class DSpotify {
 private:
+    AVLPlaylist *playlist;
+    AVLAllSongs *songs;
     //
     // Here you may add anything you want
     //

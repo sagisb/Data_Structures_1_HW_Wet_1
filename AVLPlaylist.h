@@ -8,13 +8,14 @@ public:
     AVLPlaylist *right;
     int height;
 
-    AVLPlaylist(int songId, Song *s);
+    explicit AVLPlaylist(int playlistId);
+    ~AVLPlaylist();
 
     AVLPlaylist *rotateRight(AVLPlaylist *y);
     AVLPlaylist *rotateLeft(AVLPlaylist *x);
-    AVLPlaylist *insert(AVLPlaylist *root, int key, Song *song);
+    AVLPlaylist *insert(AVLPlaylist *currentRoot, int keyId);
     AVLPlaylist *search(AVLPlaylist *root, int key) const;
-    void destroyAVLTree(AVLPlaylist *root);
+    //void destroyAVLTree(AVLPlaylist *root);
 
 private:
     int getHeight(AVLPlaylist *node) const;

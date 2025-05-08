@@ -1,8 +1,16 @@
 #include "AVLPlaylist.h"
 
-AVLPlaylist::AVLPlaylist(int PlaylistId, Playlist *s) : playlistId(PlaylistId), playlist_ptr(s),
-                                                        left(nullptr),
-                                                        right(nullptr), height(1) {}
+AVLPlaylist::AVLPlaylist(int id) :
+        playlistId(id),
+        playlist_ptr(new Playlist(id)),
+        left(nullptr),
+        right(nullptr),
+        height(1) {}
+
+AVLPlaylist::~AVLPlaylist() {
+    delete playlist_ptr;
+    playlist_ptr = nullptr;
+}
 
 int AVLPlaylist::getHeight(AVLPlaylist *node) const {
     return (node == nullptr) ? 0 : node->height;
@@ -46,44 +54,42 @@ AVLPlaylist *AVLPlaylist::rotateLeft(AVLPlaylist *x) {
     return y;
 }
 
-AVLPlaylist *AVLPlaylist::insert(AVLPlaylist *root, int key, Playlist *playlist) {
-    if (root == nullptr) {
-        return new AVLPlaylist(key, playlist);
+AVLPlaylist *AVLPlaylist::insert(AVLPlaylist *current_root, int keyId) {
+    if (current_root == nullptr) {
+        return new AVLPlaylist(keyId);
     }
 
-    if (key < root->playlistId) {
-        root->left = insert(root->left, key, playlist);
-    }
-    else if (key > root->playlistId) {
-        root->right = insert(root->right, key, playlist);
-    }
-    else {
-        return root;
+    if (keyId < current_root->playlistId) {
+        current_root->left = insert(current_root->left, keyId);
+    } else if (keyId > current_root->playlistId) {
+        current_root->right = insert(current_root->right, keyId);
+    } else {
+        return current_root;
     }
 
-    updateHeight(root);
+    updateHeight(current_root);
 
-    int balance = getBalanceFactor(root);
+    int balance = getBalanceFactor(current_root);
 
-    if (balance > 1 && key < root->left->playlistId) {
-        return rotateRight(root);
+    if (balance > 1 && keyId < current_root->left->playlistId) {
+        return rotateRight(current_root);
     }
 
-    if (balance < -1 && key > root->right->playlistId) {
-        return rotateLeft(root);
+    if (balance < -1 && keyId > current_root->right->playlistId) {
+        return rotateLeft(current_root);
     }
 
-    if (balance > 1 && key > root->left->playlistId) {
-        root->left = rotateLeft(root->left);
-        return rotateRight(root);
+    if (balance > 1 && keyId > current_root->left->playlistId) {
+        current_root->left = rotateLeft(current_root->left);
+        return rotateRight(current_root);
     }
 
-    if (balance < -1 && key < root->right->playlistId) {
-        root->right = rotateRight(root->right);
-        return rotateLeft(root);
+    if (balance < -1 && keyId < current_root->right->playlistId) {
+        current_root->right = rotateRight(current_root->right);
+        return rotateLeft(current_root);
     }
 
-    return root;
+    return current_root;
 }
 
 AVLPlaylist *AVLPlaylist::search(AVLPlaylist *root, int key) const {

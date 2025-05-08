@@ -46,17 +46,25 @@ StatusType DSpotify::delete_playlist(int playlistId) {
     if (playlistId <= 0) {
         return StatusType::INVALID_INPUT;
     }
-    if (playlist->playlistExists(playlist, playlistId)) {
-        AVLPlaylist *nodeToDelete = playlist->search(playlist, playlistId);
-        if (nodeToDelete == nullptr) {
-            return StatusType::FAILURE;
-        }
-        if (nodeToDelete->playlist_ptr->getNumOfSongs() > 0) {
-            return StatusType::FAILURE;
-        }
+    if (playlistId == nullptr) {
+        return StatusType::FAILURE;
+    }
+    AVLPlaylist *nodeToDelete = playlist->search(playlist, playlistId);
+    if (nodeToDelete == nullptr) {
+        return StatusType::FAILURE;
+    }
+    if (nodeToDelete->playlist_ptr->getNumOfSongs() > 0) {
+        return StatusType::FAILURE;
+    }
+    try {
+        playlist = playlist->deleteNode(playlist, playlistId);
+
+        return StatusType::SUCCESS;
 
     }
-    return StatusType::FAILURE;
+    catch (const std::bad_alloc &a) {
+        return StatusType::ALLOCATION_ERROR;
+    }
 }
 
 StatusType DSpotify::add_song(int songId, int plays) {

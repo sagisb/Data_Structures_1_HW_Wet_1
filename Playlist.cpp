@@ -279,7 +279,7 @@ Song *Playlist::getSongById(int song_id_search) const {
 }
 
 Song **Playlist::getAllSongs() const {
-    int size = getListSize();
+    int size = numOfSongs;
     if (size == 0) { return nullptr; }
     Song **allSongs = new Song *[size];
     SongNodeList *current = songListHead;

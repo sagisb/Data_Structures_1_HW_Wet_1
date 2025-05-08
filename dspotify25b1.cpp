@@ -4,19 +4,13 @@
 #include "dspotify25b1.h"
 
 
-DSpotify::DSpotify() {
-
-}
+DSpotify::DSpotify() : playlist(nullptr), songs(nullptr) {}
 
 DSpotify::~DSpotify() {
-    if (playlist) {
-        playlist->destroyAVLTree(playlist);
-        playlist = nullptr;
-    }
-    if (songs) {
-        songs->destroyAVLTree(songs);
-        songs = nullptr;
-    }
+    delete playlist;
+    playlist = nullptr;
+    delete songs;
+    songs = nullptr;
 }
 
 StatusType DSpotify::add_playlist(int playlistId) {
@@ -30,7 +24,7 @@ StatusType DSpotify::add_playlist(int playlistId) {
     }
     try {
         if (playlist == nullptr) {
-            playlistId = new AVLPlaylist(playlistId);
+            playlist = new AVLPlaylist(playlistId);
         }
         else {
             playlist = playlist->insert(playlist, playlistId);
@@ -46,7 +40,7 @@ StatusType DSpotify::delete_playlist(int playlistId) {
     if (playlistId <= 0) {
         return StatusType::INVALID_INPUT;
     }
-    if (playlistId == nullptr) {
+    if (playlist == nullptr) {
         return StatusType::FAILURE;
     }
     AVLPlaylist *nodeToDelete = playlist->search(playlist, playlistId);
@@ -74,18 +68,26 @@ StatusType DSpotify::add_song(int songId, int plays) {
     if (songs->search(songs, songId) == nullptr) {
         return StatusType::FAILURE;
     }
+    Song *newSongObject = nullptr;
     try {
-        if (songs == nullptr) {
-            songs = new AVLAllSongs(songId, plays);
+        newSongObject = new Song(songId, plays);
+
+        if (this->songs == nullptr) {
+            this->songs = new AVLAllSongs(songId, newSongObject);
         }
         else {
-            songs = songs->insert(songs, songId);
+            this->songs = this->songs->insert(this->songs, songId, newSongObject);
         }
         return StatusType::SUCCESS;
+
     }
     catch (const std::bad_alloc &a) {
+        delete newSongObject;
         return StatusType::ALLOCATION_ERROR;
-    }
+    }/* catch (...) {
+        delete newSongObject;
+        return StatusType::FAILURE;
+    }*/
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {

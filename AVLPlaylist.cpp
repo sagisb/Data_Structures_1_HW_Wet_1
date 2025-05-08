@@ -10,6 +10,10 @@ AVLPlaylist::AVLPlaylist(int id) :
 AVLPlaylist::~AVLPlaylist() {
     delete playlist_ptr;
     playlist_ptr = nullptr;
+    delete left;
+    left = nullptr;
+    delete right;
+    right = nullptr;
 }
 
 int AVLPlaylist::getHeight(AVLPlaylist *node) const {

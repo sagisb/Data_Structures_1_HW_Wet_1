@@ -1,13 +1,21 @@
 #include "AVLAllSongs.h"
 
-/*AVLAllSongs::AVLAllSongs(int songId, Song *s) : songId(songId), song_ptr(s), left(nullptr),
+AVLAllSongs::AVLAllSongs(int songId, Song *s) : songId(songId), song_ptr(s), left(nullptr),
                                                 right(nullptr), height(1) {}
-                                                */
+
 AVLAllSongs::AVLAllSongs(int songId, int played = 0) : songId(songId),
                                                        song_ptr(new Song(songId, played)),
                                                        left(nullptr),
                                                        right(nullptr),
                                                        height(1) {}
+AVLAllSongs::~AVLAllSongs() {
+    delete song_ptr;
+    song_ptr = nullptr;
+    delete left;
+    left = nullptr;
+    delete right;
+    right = nullptr;
+}
 int AVLAllSongs::getHeight(AVLAllSongs *node) const {
     return (node == nullptr) ? 0 : node->height;
 }

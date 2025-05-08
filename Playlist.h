@@ -1,4 +1,4 @@
-#include "Song.h"
+//#include "Song.h"
 #include "SongTreePlaylist.h"
 
 struct PlayCountNode;
@@ -44,7 +44,7 @@ private:
     void appendToList(Song *song);
     void removeFromList(int songId);
     void destroyList(SongNodeList *head);
-    int getListSize() const;
+    //int getListSize() const;
 };
 
 struct PlayCountNode {

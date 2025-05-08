@@ -9,7 +9,9 @@ public:
     int height;
 
    // AVLAllSongs(int songId, Song *s);
-    AVLAllSongs(int songId, int played = 0);
+    AVLAllSongs(int songId, int played);
+    AVLAllSongs(int sondId, Song *song);
+    ~AVLAllSongs();
 
     AVLAllSongs *rotateRight(AVLAllSongs *y);
     AVLAllSongs *rotateLeft(AVLAllSongs *x);

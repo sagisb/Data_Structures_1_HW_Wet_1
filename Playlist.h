@@ -36,10 +36,10 @@ private:
     PlayCountNode* rotateRightPlayCount(PlayCountNode* y);
     PlayCountNode* findMinPlayCount(PlayCountNode* node) const;
 
-    PlayCountNode *insertByPlayCount(PlayCountNode *root, Song *song);
-    PlayCountNode *searchByPlayCount(PlayCountNode *root, int playCount, int songId) const;
-    PlayCountNode *deleteByPlayCount(PlayCountNode *root, int playCount, int songId);
-    void destroyPlayCountTree(PlayCountNode *root);
+    PlayCountNode *insertByPlayCount(PlayCountNode *root, Song *songToInsert);
+    PlayCountNode *searchByPlayCount(PlayCountNode *root, int searchPlayCount, int searchSongId) const;
+    PlayCountNode *deleteByPlayCount(PlayCountNode *root, int targetPlayCount, int targetSongId);
+    void destroyPlayCountTree(PlayCountNode *rootNode);
 
     void appendToList(Song *song);
     void removeFromList(int songId);

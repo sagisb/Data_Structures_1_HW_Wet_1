@@ -8,6 +8,7 @@ AVLAllSongs::AVLAllSongs(int songId, int played = 0) : songId(songId),
                                                        left(nullptr),
                                                        right(nullptr),
                                                        height(1) {}
+
 AVLAllSongs::~AVLAllSongs() {
     delete song_ptr;
     song_ptr = nullptr;
@@ -16,6 +17,7 @@ AVLAllSongs::~AVLAllSongs() {
     delete right;
     right = nullptr;
 }
+
 int AVLAllSongs::getHeight(AVLAllSongs *node) const {
     return (node == nullptr) ? 0 : node->height;
 }
@@ -102,7 +104,6 @@ AVLAllSongs *AVLAllSongs::search(AVLAllSongs *root, int key) const {
     if (root == nullptr || root->songId == key) {
         return root;
     }
-
     if (key < root->songId) {
         return search(root->left, key);
     }

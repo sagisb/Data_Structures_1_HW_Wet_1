@@ -83,28 +83,28 @@ PlayCountNode *Playlist::findMinPlayCount(PlayCountNode *node) const {
     return current;
 }
 
-PlayCountNode *Playlist::insertByPlayCount(PlayCountNode *root, Song *song_to_insert) {
-    if (!song_to_insert) { return root; }
+PlayCountNode *Playlist::insertByPlayCount(PlayCountNode *root, Song *songToInsert) {
+    if (!songToInsert) { return root; }
 
-    int key_playCount = song_to_insert->getCountPlayed();
-    int key_songId = song_to_insert->getSongId();
+    int key_playCount = songToInsert->getCountPlayed();
+    int key_songId = songToInsert->getSongId();
 
     if (root == nullptr) {
-        return new PlayCountNode(key_playCount, song_to_insert);
+        return new PlayCountNode(key_playCount, songToInsert);
     }
 
     if (key_playCount < root->playCount) {
-        root->left = insertByPlayCount(root->left, song_to_insert);
+        root->left = insertByPlayCount(root->left, songToInsert);
     }
     else if (key_playCount > root->playCount) {
-        root->right = insertByPlayCount(root->right, song_to_insert);
+        root->right = insertByPlayCount(root->right, songToInsert);
     }
     else {
         if (key_songId < root->songPtr->getSongId()) {
-            root->left = insertByPlayCount(root->left, song_to_insert);
+            root->left = insertByPlayCount(root->left, songToInsert);
         }
         else if (key_songId > root->songPtr->getSongId()) {
-            root->right = insertByPlayCount(root->right, song_to_insert);
+            root->right = insertByPlayCount(root->right, songToInsert);
         }
         else {
             return root;
@@ -144,23 +144,23 @@ PlayCountNode *Playlist::insertByPlayCount(PlayCountNode *root, Song *song_to_in
 }
 
 PlayCountNode *
-Playlist::deleteByPlayCount(PlayCountNode *root, int target_playCount, int target_songId) {
+Playlist::deleteByPlayCount(PlayCountNode *root, int targetPlayCount, int targetSongId) {
     if (root == nullptr) {
         return root;
     }
 
-    if (target_playCount < root->playCount) {
-        root->left = deleteByPlayCount(root->left, target_playCount, target_songId);
+    if (targetPlayCount < root->playCount) {
+        root->left = deleteByPlayCount(root->left, targetPlayCount, targetSongId);
     }
-    else if (target_playCount > root->playCount) {
-        root->right = deleteByPlayCount(root->right, target_playCount, target_songId);
+    else if (targetPlayCount > root->playCount) {
+        root->right = deleteByPlayCount(root->right, targetPlayCount, targetSongId);
     }
     else {
-        if (target_songId < root->songPtr->getSongId()) {
-            root->left = deleteByPlayCount(root->left, target_playCount, target_songId);
+        if (targetSongId < root->songPtr->getSongId()) {
+            root->left = deleteByPlayCount(root->left, targetPlayCount, targetSongId);
         }
-        else if (target_songId > root->songPtr->getSongId()) {
-            root->right = deleteByPlayCount(root->right, target_playCount, target_songId);
+        else if (targetSongId > root->songPtr->getSongId()) {
+            root->right = deleteByPlayCount(root->right, targetPlayCount, targetSongId);
         }
         else {
             if ((root->left == nullptr) || (root->right == nullptr)) {
@@ -204,23 +204,23 @@ Playlist::deleteByPlayCount(PlayCountNode *root, int target_playCount, int targe
 }
 
 PlayCountNode *
-Playlist::searchByPlayCount(PlayCountNode *root, int search_playCount, int search_songId) const {
+Playlist::searchByPlayCount(PlayCountNode *root, int searchPlayCount, int searchSongId) const {
     if (root == nullptr) {
         return nullptr;
     }
 
-    if (search_playCount < root->playCount) {
-        return searchByPlayCount(root->left, search_playCount, search_songId);
+    if (searchPlayCount < root->playCount) {
+        return searchByPlayCount(root->left, searchPlayCount, searchSongId);
     }
-    else if (search_playCount > root->playCount) {
-        return searchByPlayCount(root->right, search_playCount, search_songId);
+    else if (searchPlayCount > root->playCount) {
+        return searchByPlayCount(root->right, searchPlayCount, searchSongId);
     }
     else {
-        if (search_songId < root->songPtr->getSongId()) {
-            return searchByPlayCount(root->left, search_playCount, search_songId);
+        if (searchSongId < root->songPtr->getSongId()) {
+            return searchByPlayCount(root->left, searchPlayCount, searchSongId);
         }
-        else if (search_songId > root->songPtr->getSongId()) {
-            return searchByPlayCount(root->right, search_playCount, search_songId);
+        else if (searchSongId > root->songPtr->getSongId()) {
+            return searchByPlayCount(root->right, searchPlayCount, searchSongId);
         }
         else {
             return root;
@@ -228,11 +228,11 @@ Playlist::searchByPlayCount(PlayCountNode *root, int search_playCount, int searc
     }
 }
 
-void Playlist::destroyPlayCountTree(PlayCountNode *root_node) {
-    if (root_node) {
-        destroyPlayCountTree(root_node->left);
-        destroyPlayCountTree(root_node->right);
-        delete root_node;
+void Playlist::destroyPlayCountTree(PlayCountNode *rootNode) {
+    if (rootNode) {
+        destroyPlayCountTree(rootNode->left);
+        destroyPlayCountTree(rootNode->right);
+        delete rootNode;
     }
 }
 

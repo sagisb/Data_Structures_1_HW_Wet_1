@@ -1,4 +1,5 @@
 #include "Playlist.h"
+#pragma once
 
 struct AVLPlaylist {
 public:

@@ -65,13 +65,12 @@ StatusType DSpotify::add_song(int songId, int plays) {
     if (songId <= 0 || plays < 0) {
         return StatusType::INVALID_INPUT;
     }
-    if (songs->search(songs, songId) == nullptr) {
+    if (songs != nullptr && songs->search(songs, songId) != nullptr) {
         return StatusType::FAILURE;
     }
     Song *newSongObject = nullptr;
     try {
         newSongObject = new Song(songId, plays);
-
         if (this->songs == nullptr) {
             this->songs = new AVLAllSongs(songId, newSongObject);
         }
@@ -79,15 +78,11 @@ StatusType DSpotify::add_song(int songId, int plays) {
             this->songs = this->songs->insert(this->songs, songId, newSongObject);
         }
         return StatusType::SUCCESS;
-
     }
     catch (const std::bad_alloc &a) {
         delete newSongObject;
         return StatusType::ALLOCATION_ERROR;
-    }/* catch (...) {
-        delete newSongObject;
-        return StatusType::FAILURE;
-    }*/
+    }
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {

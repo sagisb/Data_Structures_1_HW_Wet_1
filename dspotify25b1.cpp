@@ -3,6 +3,7 @@
 
 #include "dspotify25b1.h"
 
+const int PLAYS_NUM_DEFAULT_VALUE = 0;
 
 DSpotify::DSpotify() : playlist(nullptr), songs(nullptr) {}
 
@@ -25,8 +26,7 @@ StatusType DSpotify::add_playlist(int playlistId) {
     try {
         if (playlist == nullptr) {
             playlist = new AVLPlaylist(playlistId);
-        }
-        else {
+        } else {
             playlist = playlist->insert(playlist, playlistId);
         }
         return StatusType::SUCCESS;
@@ -73,8 +73,7 @@ StatusType DSpotify::add_song(int songId, int plays) {
         newSongObject = new Song(songId, plays);
         if (this->songs == nullptr) {
             this->songs = new AVLAllSongs(songId, newSongObject);
-        }
-        else {
+        } else {
             this->songs = this->songs->insert(this->songs, songId, newSongObject);
         }
         return StatusType::SUCCESS;
@@ -86,7 +85,24 @@ StatusType DSpotify::add_song(int songId, int plays) {
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
-    return StatusType::FAILURE;
+    if (songId <= 0 || playlistId < 0 || this->playlist == nullptr
+        || this->songs == nullptr
+        || this->songs->search(this->songs, songId) == nullptr
+        || this->playlist->search(this->playlist, playlistId) ==
+           nullptr) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    try {
+        Song *relevantSong = this->songs->search(this->songs, songId)->song_ptr;
+        AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
+        relevantPlaylist->insert(this->playlist, relevantSong->getSongId());
+        relevantSong->increaseCountPlayed();
+    }
+    catch (const std::bad_alloc &a) {
+        return StatusType::ALLOCATION_ERROR;
+    }
+    return StatusType::SUCCESS;
 }
 
 StatusType DSpotify::delete_song(int songId) {

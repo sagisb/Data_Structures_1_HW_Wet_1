@@ -89,7 +89,7 @@ StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
         || this->songs == nullptr
         || this->songs->search(this->songs, songId) == nullptr
         || this->playlist->search(this->playlist, playlistId) ==
-           nullptr) {
+           nullptr) { // TODO: make checks for null values later to avoid time addition for duplicated operations
         return StatusType::INVALID_INPUT;
     }
 
@@ -106,23 +106,77 @@ StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
 }
 
 StatusType DSpotify::delete_song(int songId) {
-    return StatusType::FAILURE;
+    if (songId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    AVLAllSongs *songToRemove = this->songs->search(this->songs, songId);
+    if (songToRemove == nullptr || songToRemove->song_ptr->getCountPlayed() > 0) {
+        return StatusType::FAILURE;
+    }
+    this->songs->removeNode(songId); // TODO: implement
+    return StatusType::SUCCESS;
 }
 
 StatusType DSpotify::remove_from_playlist(int playlistId, int songId) {
-    return StatusType::FAILURE;
+    if (songId <= 0 || playlistId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+    AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
+    if (!relevantPlaylist) {
+        return StatusType::FAILURE;
+    }
+    Song *relevantSong = relevantPlaylist->playlist_ptr->getSongById(songId);
+    if (!relevantSong) {
+        return StatusType::FAILURE;
+    }
+
+    relevantPlaylist->playlist_ptr->removeSong(songId);
+    relevantSong->decrementingSongFromPlaylist();
+    return StatusType::SUCCESS;
 }
 
 output_t<int> DSpotify::get_plays(int songId) {
-    return 0;
+    if (songId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    AVLAllSongs *relevantSong = this->songs->search(this->songs, songId);
+    if (!relevantSong) {
+        return StatusType::FAILURE;
+    }
+
+    return relevantSong->song_ptr->getCountPlayed();
 }
 
 output_t<int> DSpotify::get_num_songs(int playlistId) {
-    return 0;
+    if (playlistId <= 0) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
+    if (!relevantPlaylist) {
+        return StatusType::FAILURE;
+    }
+
+    return relevantPlaylist->playlist_ptr->getNumOfSongs();
 }
 
 output_t<int> DSpotify::get_by_plays(int playlistId, int plays) {
-    return 0;
+    if (playlistId <= 0 || plays < 0) {
+        return StatusType::INVALID_INPUT;
+    }
+    AVLPlaylist *relevantPlaylistNode = this->playlist->search(this->playlist, playlistId);
+    if (!relevantPlaylistNode) {
+        return StatusType::FAILURE;
+    }
+
+    Song *closestSongByPlays = relevantPlaylistNode->playlist_ptr->getSongByPlayCount(plays); // TODO: implement
+    if (!closestSongByPlays) {
+        return StatusType::FAILURE;
+    }
+
+    return closestSongByPlays->getSongId();
 }
 
 StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {

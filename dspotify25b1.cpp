@@ -180,5 +180,56 @@ output_t<int> DSpotify::get_by_plays(int playlistId, int plays) {
 }
 
 StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
-    return StatusType::FAILURE;
+    if (playlistId1 <= 0 || playlistId2 <= 0 || playlistId1 == playlistId2) {
+        return StatusType::INVALID_INPUT;
+    }
+
+    // find playlists
+    AVLPlaylist *playlistOneNode = playlist->search(playlist, playlistId1);
+    AVLPlaylist *playlistTwoNode = playlist->search(playlist, playlistId2);
+    if (!playlistOneNode || !playlistTwoNode) { return StatusType::FAILURE; }
+
+    Playlist *playListOne = playlistOneNode->playlist_ptr;
+    Playlist *playlistTwo = playlistTwoNode->playlist_ptr;
+
+    // ======================== songsByIdTree ========================
+    // convert song trees to Song* arrays sorted by
+
+    // merge arrays to one array
+
+    // create almost empty SongTreePlaylist Tree (with n1+n2 nodes)
+
+    // traverse Tree inorder and insert songs pointers
+
+    SongTreePlaylist *mergedSongsById;
+
+    // ======================== songsByPlayCountTree ========================
+    // convert song trees to Song* arrays sorted by
+
+    // merge arrays to one array
+
+    // create almost empty SongTreePlaylist Tree (with n1+n2 nodes)
+
+    // traverse Tree inorder and insert songs pointers
+
+    PlayCountNode *mergedSongsByPlayCount;
+
+    // ======================== merge linked lists ========================
+    // TODO: consider just creating a new list since in this methods, if a song is in 2 of the playlists it will have 2 nodes in the list
+    playListOne->getListTTail()->next = playlistTwo->getListHead();
+    playlistTwo->setListHead(nullptr);
+    playlistTwo->setListTail(nullptr);
+
+
+    // ======================== Set playlistOne properties to newly created objects ========================
+    playlistOneNode->playlist_ptr->setSongsByIdTree(mergedSongsById);
+    playlistOneNode->playlist_ptr->setAVLPlayCount(mergedSongsByPlayCount);
+    playlistOneNode->playlist_ptr->setNumOfSongs(mergedSongsByPlayCount->height);
+
+    // ======================== remove playlistTwoNode and delete playlistTwo ========================
+    this->playlist->deleteNode(this->playlist, playlistId2);
+
+
+    return StatusType::SUCCESS;
+
 }

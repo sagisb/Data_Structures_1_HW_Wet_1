@@ -95,18 +95,14 @@ PlayCountNode *Playlist::insertByPlayCount(PlayCountNode *root, Song *songToInse
 
     if (key_playCount < root->playCount) {
         root->left = insertByPlayCount(root->left, songToInsert);
-    }
-    else if (key_playCount > root->playCount) {
+    } else if (key_playCount > root->playCount) {
         root->right = insertByPlayCount(root->right, songToInsert);
-    }
-    else {
+    } else {
         if (key_songId < root->songPtr->getSongId()) {
             root->left = insertByPlayCount(root->left, songToInsert);
-        }
-        else if (key_songId > root->songPtr->getSongId()) {
+        } else if (key_songId > root->songPtr->getSongId()) {
             root->right = insertByPlayCount(root->right, songToInsert);
-        }
-        else {
+        } else {
             return root;
         }
     }
@@ -151,24 +147,19 @@ Playlist::deleteByPlayCount(PlayCountNode *root, int targetPlayCount, int target
 
     if (targetPlayCount < root->playCount) {
         root->left = deleteByPlayCount(root->left, targetPlayCount, targetSongId);
-    }
-    else if (targetPlayCount > root->playCount) {
+    } else if (targetPlayCount > root->playCount) {
         root->right = deleteByPlayCount(root->right, targetPlayCount, targetSongId);
-    }
-    else {
+    } else {
         if (targetSongId < root->songPtr->getSongId()) {
             root->left = deleteByPlayCount(root->left, targetPlayCount, targetSongId);
-        }
-        else if (targetSongId > root->songPtr->getSongId()) {
+        } else if (targetSongId > root->songPtr->getSongId()) {
             root->right = deleteByPlayCount(root->right, targetPlayCount, targetSongId);
-        }
-        else {
+        } else {
             if ((root->left == nullptr) || (root->right == nullptr)) {
                 PlayCountNode *node_to_delete = root;
                 root = (root->left ? root->left : root->right);
                 delete node_to_delete;
-            }
-            else {
+            } else {
                 PlayCountNode *temp = findMinPlayCount(root->right);
                 root->playCount = temp->playCount;
                 root->songPtr = temp->songPtr;
@@ -211,18 +202,14 @@ Playlist::searchByPlayCount(PlayCountNode *root, int searchPlayCount, int search
 
     if (searchPlayCount < root->playCount) {
         return searchByPlayCount(root->left, searchPlayCount, searchSongId);
-    }
-    else if (searchPlayCount > root->playCount) {
+    } else if (searchPlayCount > root->playCount) {
         return searchByPlayCount(root->right, searchPlayCount, searchSongId);
-    }
-    else {
+    } else {
         if (searchSongId < root->songPtr->getSongId()) {
             return searchByPlayCount(root->left, searchPlayCount, searchSongId);
-        }
-        else if (searchSongId > root->songPtr->getSongId()) {
+        } else if (searchSongId > root->songPtr->getSongId()) {
             return searchByPlayCount(root->right, searchPlayCount, searchSongId);
-        }
-        else {
+        } else {
             return root;
         }
     }
@@ -310,8 +297,7 @@ void Playlist::appendToList(Song *song) {
     SongNodeList *newNode = new SongNodeList(song);
     if (!songListHead) {
         songListHead = songListTail = newNode;
-    }
-    else {
+    } else {
         songListTail->next = newNode;
         newNode->prev = songListTail;
         songListTail = newNode;
@@ -361,4 +347,38 @@ void Playlist::destroyList(SongNodeList *head_node) {
     }
     songListHead = nullptr;
     songListTail = nullptr;
+}
+
+Song *Playlist::getSongByPlayCount(int playCount) const {
+    return nullptr;
+}
+
+void Playlist::setSongsByIdTree(SongTreePlaylist *newSongsByIdTree) {
+    delete this->songsByIdTree;
+    this->songsByIdTree = newSongsByIdTree;
+}
+
+void Playlist::setAVLPlayCount(PlayCountNode *newAVLPlayCount) {
+    destroyPlayCountTree(this->AVLPlayCount);
+    this->AVLPlayCount = newAVLPlayCount;
+}
+
+void Playlist::setNumOfSongs(int newNumOfSongs) {
+    this->numOfSongs = newNumOfSongs;
+}
+
+SongNodeList *Playlist::getListHead() {
+    return this->songListHead;
+}
+
+void Playlist::setListHead(SongNodeList *newHead) {
+    this->songListHead = newHead;
+}
+
+SongNodeList *Playlist::getListTTail() {
+    return this->songListTail;
+}
+
+void Playlist::setListTail(SongNodeList *newTail) {
+    this->songListTail = newTail;
 }

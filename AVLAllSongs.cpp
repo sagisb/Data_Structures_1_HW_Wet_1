@@ -67,11 +67,9 @@ AVLAllSongs *AVLAllSongs::insert(AVLAllSongs *root, int key, Song *song) {
 
     if (key < root->songId) {
         root->left = insert(root->left, key, song);
-    }
-    else if (key > root->songId) {
+    } else if (key > root->songId) {
         root->right = insert(root->right, key, song);
-    }
-    else {
+    } else {
         return root;
     }
 
@@ -106,8 +104,7 @@ AVLAllSongs *AVLAllSongs::search(AVLAllSongs *root, int key) const {
     }
     if (key < root->songId) {
         return search(root->left, key);
-    }
-    else {
+    } else {
         return search(root->right, key);
     }
 }
@@ -118,4 +115,8 @@ void AVLAllSongs::destroyAVLTree(AVLAllSongs *root) {
         destroyAVLTree(root->right);
         delete root;
     }
+}
+
+void AVLAllSongs::removeNode(int removedSongId) {
+
 }

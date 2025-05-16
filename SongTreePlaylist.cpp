@@ -1,7 +1,8 @@
+#include "Playlist.h"
 #include "SongTreePlaylist.h"
 #include <iostream>
 
-PlaylistTreeNode::PlaylistTreeNode(Song* song, SongNodeList* node)
+PlaylistTreeNode::PlaylistTreeNode(Song *song, SongNodeList *node)
         : songId(song->getSongId()), songPtr(song), linkedListNodePtr(node), left(nullptr), right(nullptr), height(1) {}
 
 SongTreePlaylist::SongTreePlaylist() : root(nullptr) {}
@@ -10,7 +11,7 @@ SongTreePlaylist::~SongTreePlaylist() {
     destroyTree(root);
 }
 
-void SongTreePlaylist::destroyTree(PlaylistTreeNode* current_root) {
+void SongTreePlaylist::destroyTree(PlaylistTreeNode *current_root) {
     if (current_root) {
         destroyTree(current_root->left);
         destroyTree(current_root->right);
@@ -18,15 +19,15 @@ void SongTreePlaylist::destroyTree(PlaylistTreeNode* current_root) {
     }
 }
 
-int SongTreePlaylist::height(PlaylistTreeNode* node) const {
+int SongTreePlaylist::height(PlaylistTreeNode *node) const {
     return (node == nullptr) ? 0 : node->height;
 }
 
-int SongTreePlaylist::balanceFactor(PlaylistTreeNode* node) const {
+int SongTreePlaylist::balanceFactor(PlaylistTreeNode *node) const {
     return (node == nullptr) ? 0 : height(node->left) - height(node->right);
 }
 
-void SongTreePlaylist::updateHeight(PlaylistTreeNode* node) {
+void SongTreePlaylist::updateHeight(PlaylistTreeNode *node) {
     if (node) {
         int leftH = height(node->left);
         int rightH = height(node->right);
@@ -34,9 +35,9 @@ void SongTreePlaylist::updateHeight(PlaylistTreeNode* node) {
     }
 }
 
-PlaylistTreeNode* SongTreePlaylist::rotateLeft(PlaylistTreeNode* x) {
-    PlaylistTreeNode* y = x->right;
-    PlaylistTreeNode* T2 = y->left;
+PlaylistTreeNode *SongTreePlaylist::rotateLeft(PlaylistTreeNode *x) {
+    PlaylistTreeNode *y = x->right;
+    PlaylistTreeNode *T2 = y->left;
 
     y->left = x;
     x->right = T2;
@@ -47,9 +48,9 @@ PlaylistTreeNode* SongTreePlaylist::rotateLeft(PlaylistTreeNode* x) {
     return y;
 }
 
-PlaylistTreeNode* SongTreePlaylist::rotateRight(PlaylistTreeNode* y) {
-    PlaylistTreeNode* x = y->left;
-    PlaylistTreeNode* T2 = x->right;
+PlaylistTreeNode *SongTreePlaylist::rotateRight(PlaylistTreeNode *y) {
+    PlaylistTreeNode *x = y->left;
+    PlaylistTreeNode *T2 = x->right;
 
     x->right = y;
     y->left = T2;
@@ -60,7 +61,7 @@ PlaylistTreeNode* SongTreePlaylist::rotateRight(PlaylistTreeNode* y) {
     return x;
 }
 
-PlaylistTreeNode* SongTreePlaylist::insert(PlaylistTreeNode* current_root, Song* song, SongNodeList* node) {
+PlaylistTreeNode *SongTreePlaylist::insert(PlaylistTreeNode *current_root, Song *song, SongNodeList *node) {
     if (current_root == nullptr) {
         return new PlaylistTreeNode(song, node);
     }
@@ -95,7 +96,7 @@ PlaylistTreeNode* SongTreePlaylist::insert(PlaylistTreeNode* current_root, Song*
     return current_root;
 }
 
-PlaylistTreeNode* SongTreePlaylist::search(PlaylistTreeNode* current_root, int search_songId) const {
+PlaylistTreeNode *SongTreePlaylist::search(PlaylistTreeNode *current_root, int search_songId) const {
     if (current_root == nullptr || current_root->songId == search_songId) {
         return current_root;
     }
@@ -106,7 +107,7 @@ PlaylistTreeNode* SongTreePlaylist::search(PlaylistTreeNode* current_root, int s
     }
 }
 
-PlaylistTreeNode* SongTreePlaylist::deleteNode(PlaylistTreeNode* current_root, int song_id_to_delete) {
+PlaylistTreeNode *SongTreePlaylist::deleteNode(PlaylistTreeNode *current_root, int song_id_to_delete) {
     if (current_root == nullptr)
         return current_root;
 
@@ -116,11 +117,11 @@ PlaylistTreeNode* SongTreePlaylist::deleteNode(PlaylistTreeNode* current_root, i
         current_root->right = deleteNode(current_root->right, song_id_to_delete);
     else {
         if ((current_root->left == nullptr) || (current_root->right == nullptr)) {
-            PlaylistTreeNode* temp = current_root->left ? current_root->left : current_root->right;
+            PlaylistTreeNode *temp = current_root->left ? current_root->left : current_root->right;
             delete current_root;
             return temp;
         } else {
-            PlaylistTreeNode* temp = findMin(current_root->right);
+            PlaylistTreeNode *temp = findMin(current_root->right);
             current_root->songId = temp->songId;
             current_root->songPtr = temp->songPtr;
             current_root->linkedListNodePtr = temp->linkedListNodePtr;
@@ -153,28 +154,102 @@ PlaylistTreeNode* SongTreePlaylist::deleteNode(PlaylistTreeNode* current_root, i
     return current_root;
 }
 
-PlaylistTreeNode* SongTreePlaylist::findMin(PlaylistTreeNode* node) const {
-    PlaylistTreeNode* current = node;
+PlaylistTreeNode *SongTreePlaylist::findMin(PlaylistTreeNode *node) const {
+    PlaylistTreeNode *current = node;
     while (current != nullptr && current->left != nullptr) {
         current = current->left;
     }
     return current;
 }
 
-void SongTreePlaylist::addSong(Song* song, SongNodeList* node) {
+void SongTreePlaylist::addSong(Song *song, SongNodeList *node) {
     root = insert(root, song, node);
 }
 
-Song* SongTreePlaylist::getSongById(int search_songId) const {
-    PlaylistTreeNode* node = search(root, search_songId);
+Song *SongTreePlaylist::getSongById(int search_songId) const {
+    PlaylistTreeNode *node = search(root, search_songId);
     return node ? node->songPtr : nullptr;
 }
 
-SongNodeList* SongTreePlaylist::getSongNode(int search_songId) const {
-    PlaylistTreeNode* node = search(root, search_songId);
+SongNodeList *SongTreePlaylist::getSongNode(int search_songId) const {
+    PlaylistTreeNode *node = search(root, search_songId);
     return node ? node->linkedListNodePtr : nullptr;
 }
 
 void SongTreePlaylist::removeSong(int song_id_to_delete) {
     root = deleteNode(root, song_id_to_delete);
+}
+
+void getLinkedListFromPlaylistTreeNode(PlaylistTreeNode *root, SongNodeList *&listIterator) {
+    if (root == nullptr) {
+        return;
+    }
+    getLinkedListFromPlaylistTreeNode(root->left, listIterator);
+    try {
+        SongNodeList *currentSong = new SongNodeList(root->songPtr);
+        if (listIterator) {
+            listIterator->next = currentSong;
+        } else {
+            listIterator = currentSong;
+        }
+        listIterator = listIterator->next;
+        getLinkedListFromPlaylistTreeNode(root->right, listIterator);
+    }
+    catch (const std::bad_alloc &exc) {
+        delete listIterator;
+        throw exc;
+    }
+}
+
+SongNodeList *SongTreePlaylist::toLinkedList() {
+    if (this->root == nullptr) {
+        return nullptr;
+    }
+    SongNodeList *head = new SongNodeList(nullptr);
+    getLinkedListFromPlaylistTreeNode(this->root, head);
+    SongNodeList *dummy = head;
+    head = head->next;
+    head->prev = nullptr;
+    delete dummy;
+    return head;
+}
+
+PlaylistTreeNode *SongTreePlaylist::getRoot() {
+    return this->root;
+}
+
+PlaylistTreeNode *createAlmostEmptySongTree(int nodesAmount) {
+    if (nodesAmount == 0) {
+        return nullptr;
+    }
+
+    PlaylistTreeNode *root = new PlaylistTreeNode(nullptr, nullptr);
+    int nodesRemainingAmount = nodesAmount - 1;
+    int nodesToLeftAmount = (nodesAmount / 2) + (nodesRemainingAmount % 2);
+    int nodesToRightAmount = (nodesAmount / 2);
+    root->left = createAlmostEmptySongTree(nodesToLeftAmount);
+    root->right = createAlmostEmptySongTree(nodesToRightAmount);
+    return root;
+}
+
+SongTreePlaylist::SongTreePlaylist(int nodesAmount) {
+    this->root = createAlmostEmptySongTree(nodesAmount);
+}
+
+void populateSongsTree(PlaylistTreeNode *root, SongNodeList *songsList, int height) {
+    if (!root) { return; }
+    SongNodeList *listIterator = songsList;
+    populateSongsTree(root->left, listIterator, height + 1);
+    listIterator = listIterator->next;
+
+    root->songPtr = listIterator->songPtr;
+    root->songId = listIterator->songPtr->getSongId();
+    root->height = height;
+
+    listIterator = listIterator->next;
+    populateSongsTree(root->right, listIterator, height + 1);
+}
+
+void SongTreePlaylist::populateTree(SongNodeList *songsList) {
+    populateSongsTree(this->root, songsList, 0);
 }

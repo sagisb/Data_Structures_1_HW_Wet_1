@@ -65,11 +65,9 @@ AVLPlaylist *AVLPlaylist::insert(AVLPlaylist *current_root, int keyId) {
 
     if (keyId < current_root->playlistId) {
         current_root->left = insert(current_root->left, keyId);
-    }
-    else if (keyId > current_root->playlistId) {
+    } else if (keyId > current_root->playlistId) {
         current_root->right = insert(current_root->right, keyId);
-    }
-    else {
+    } else {
         return current_root;
     }
 
@@ -105,8 +103,7 @@ AVLPlaylist *AVLPlaylist::search(AVLPlaylist *root, int key) const {
 
     if (key < root->playlistId) {
         return search(root->left, key);
-    }
-    else {
+    } else {
         return search(root->right, key);
     }
 }
@@ -133,27 +130,23 @@ AVLPlaylist *AVLPlaylist::deleteNode(AVLPlaylist *current_root, int IdToDelete) 
 
     if (IdToDelete < current_root->playlistId) {
         current_root->left = deleteNode(current_root->left, IdToDelete);
-    }
-    else if (IdToDelete > current_root->playlistId) {
+    } else if (IdToDelete > current_root->playlistId) {
         current_root->right = deleteNode(current_root->right, IdToDelete);
-    }
-    else {
+    } else {
         if (current_root->left == nullptr || current_root->right == nullptr) {
             AVLPlaylist *temp = current_root->left ? current_root->left : current_root->right;
 
             if (temp == nullptr) {
                 temp = current_root;
                 current_root = nullptr;
-            }
-            else {
+            } else {
                 AVLPlaylist *node_to_free = current_root;
                 current_root = temp;
                 temp = node_to_free;
             }
 
             delete temp;
-        }
-        else {
+        } else {
             AVLPlaylist *successor = getMinValueNode(current_root->right);
 
             current_root->playlistId = successor->playlistId;
@@ -197,10 +190,15 @@ AVLPlaylist *AVLPlaylist::deleteNode(AVLPlaylist *current_root, int IdToDelete) 
     return current_root;
 }
 
-AVLPlaylist* AVLPlaylist::getMinValueNode(AVLPlaylist* node) {
-    AVLPlaylist* current = node;
+AVLPlaylist *AVLPlaylist::getMinValueNode(AVLPlaylist *node) {
+    AVLPlaylist *current = node;
     while (current && current->left != nullptr) {
         current = current->left;
     }
     return current;
+}
+
+void AVLPlaylist::setPlaylist(Playlist *newPlaylistPtr) {
+    delete this->playlist_ptr;
+    this->playlist_ptr = newPlaylistPtr;
 }

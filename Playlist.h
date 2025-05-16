@@ -1,3 +1,5 @@
+#pragma once
+
 //#include "Song.h"
 #include "SongTreePlaylist.h"
 
@@ -38,9 +40,11 @@ public:
     Song *getSongByPlayCount(int songId) const;
 
     SongNodeList *getListHead();
+
     void setListHead(SongNodeList *newHead);
 
     SongNodeList *getListTTail();
+
     void setListTail(SongNodeList *newTail);
 
     void setSongsByIdTree(SongTreePlaylist *newSongsByIdTree);
@@ -48,6 +52,11 @@ public:
     void setAVLPlayCount(PlayCountNode *newAVLPlayCount);
 
     void setNumOfSongs(int newNumOfSongs);
+
+    SongTreePlaylist *getSongsByIdTree();
+
+    PlayCountNode *getAVLPlayCount();
+
 
 private:
     int heightPlayCount(PlayCountNode *node) const;
@@ -86,6 +95,14 @@ struct PlayCountNode {
     int height;
 
     PlayCountNode(int count, Song *song);
+
+    explicit PlayCountNode(int nodesAmount);
+
+    SongNodeList *toLinkedList();
+
+    void populateCountNodeTree(PlayCountNode *root, SongNodeList *songsList);
+
+    PlayCountNode *findMinimalUpperPlayCount(int playCount);
 };
 
 struct SongNodeList {
@@ -93,5 +110,18 @@ struct SongNodeList {
     SongNodeList *next;
     SongNodeList *prev;
 
-    SongNodeList(Song *song);
+    explicit SongNodeList(Song *song);
+
+    ~SongNodeList() {
+        SongNodeList *p = next;
+        while (p) {
+            SongNodeList *tmp = p->next;
+            p->next = nullptr;
+            p->prev = nullptr;
+            delete p;
+            p = tmp;
+        }
+        next = prev = nullptr;
+        songPtr = nullptr;
+    }
 };

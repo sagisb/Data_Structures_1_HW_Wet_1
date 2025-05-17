@@ -54,7 +54,6 @@ StatusType DSpotify::delete_playlist(int playlistId) {
         playlist = playlist->deleteNode(playlist, playlistId);
 
         return StatusType::SUCCESS;
-
     }
     catch (const std::bad_alloc &a) {
         return StatusType::ALLOCATION_ERROR;
@@ -85,20 +84,24 @@ StatusType DSpotify::add_song(int songId, int plays) {
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
-    if (songId <= 0 || playlistId < 0 || this->playlist == nullptr
-        || this->songs == nullptr
-        || this->songs->search(this->songs, songId) == nullptr
-        || this->playlist->search(this->playlist, playlistId) ==
-           nullptr) { // TODO: make checks for null values later to avoid time addition for duplicated operations
+    if (songId <= 0 ||
+        playlistId < 0) { // TODO: make checks for null values later to avoid time addition for duplicated operations
         return StatusType::INVALID_INPUT;
     }
 
+    if (!this->songs || !this->playlist) {
+        return StatusType::FAILURE;
+    }
+
     try {
-        Song *relevantSong = this->songs->search(this->songs, songId)->song_ptr;
+        AVLAllSongs *relevantSongNode = this->songs->search(this->songs, songId);
         AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
-        relevantPlaylist->playlist_ptr->addSong(relevantSong);
 
+        if (!relevantSongNode || !relevantPlaylist) {
+            return StatusType::FAILURE;
+        }
 
+        relevantPlaylist->playlist_ptr->addSong(relevantSongNode->song_ptr);
     }
     catch (const std::bad_alloc &a) {
         return StatusType::ALLOCATION_ERROR;
@@ -112,7 +115,7 @@ StatusType DSpotify::delete_song(int songId) {
     }
 
     AVLAllSongs *songToRemove = this->songs->search(this->songs, songId);
-    if (songToRemove == nullptr || songToRemove->song_ptr->getCountPlayed() > 0) {
+    if (songToRemove == nullptr || songToRemove->song_ptr->getCountPlaylist() > 0) {
         return StatusType::FAILURE;
     }
     this->songs->removeNode(songId); // TODO: implement
@@ -268,97 +271,187 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         return StatusType::INVALID_INPUT;
     }
 
-
-    // find playlists
+    // Find playlists
     AVLPlaylist *playlistOneNode = playlist->search(playlist, playlistId1);
     AVLPlaylist *playlistTwoNode = playlist->search(playlist, playlistId2);
-    if (!playlistOneNode || !playlistTwoNode) { return StatusType::FAILURE; }
+    if (!playlistOneNode || !playlistTwoNode) {
+        return StatusType::FAILURE;
+    }
 
     Playlist *playlistOne = playlistOneNode->playlist_ptr;
     Playlist *playlistTwo = playlistTwoNode->playlist_ptr;
 
-    // handle list one or two empty
+    // Handle empty playlists
     if (playlistTwo->getNumOfSongs() == 0) {
+        // Nothing to merge, playlist2 is empty
+        this->playlist = this->playlist->deleteNode(this->playlist, playlistId2);
         return StatusType::SUCCESS;
     } else if (playlistOne->getNumOfSongs() == 0) {
-        // set playlistOne to playlistTwo
-        // TODO: finish
-        playlistOne->setAVLPlayCount(playlistTwo->getAVLPlayCount());
-        return StatusType::SUCCESS;
+        // If playlist1 is empty, just copy all data structures from playlist2
+        try {
+            // Create a deep copy of playlist2's song tree
+            SongNodeList *playlist2Songs = playlistTwo->getSongsByIdTree()->toLinkedList();
+            SongTreePlaylist *newTree = new SongTreePlaylist(playlistTwo->getNumOfSongs());
+            newTree->populateTree(playlist2Songs);
+
+            // Create a deep copy of playlist2's play count tree
+            SongNodeList *playlist2SongsByCount = playlistTwo->getAVLPlayCount()->toLinkedList();
+            PlayCountNode *newCountTree = new PlayCountNode(playlistTwo->getNumOfSongs());
+            newCountTree->populateCountNodeTree(playlist2SongsByCount);
+
+            // Set playlist1's data structures
+            playlistOne->setSongsByIdTree(newTree);
+            playlistOne->setAVLPlayCount(newCountTree);
+            playlistOne->setNumOfSongs(playlistTwo->getNumOfSongs());
+
+            // Create a linked list for playlist1
+            SongNodeList *head = nullptr;
+            SongNodeList *tail = nullptr;
+            SongNodeList *current = playlist2Songs;
+
+            while (current) {
+                SongNodeList *newNode = new SongNodeList(current->songPtr);
+                if (!head) {
+                    head = tail = newNode;
+                } else {
+                    tail->next = newNode;
+                    newNode->prev = tail;
+                    tail = newNode;
+                }
+                current = current->next;
+            }
+
+            // Set the linked list head and tail
+            playlistOne->setListHead(head);
+            playlistOne->setListTail(tail);
+
+            // Clean up temporary lists
+            current = playlist2Songs;
+            while (current) {
+                SongNodeList *next = current->next;
+                delete current;
+                current = next;
+            }
+
+            current = playlist2SongsByCount;
+            while (current) {
+                SongNodeList *next = current->next;
+                delete current;
+                current = next;
+            }
+
+            // Remove playlist2
+            this->playlist = this->playlist->deleteNode(this->playlist, playlistId2);
+            return StatusType::SUCCESS;
+        }
+        catch (const std::bad_alloc &exc) {
+            return StatusType::ALLOCATION_ERROR;
+        }
     }
 
+    // Both playlists have songs - need to merge
     try {
-        // ======================== songsByIdTree ========================
-        // convert song trees to Song* arrays sorted by songId
-        SongNodeList *playlistOneByIdLinkedList = playlistOne->getSongsByIdTree()->toLinkedList();
-        SongNodeList *playlistTwoByIdLinkedList = playlistTwo->getSongsByIdTree()->toLinkedList();
+        // Convert song trees to linked lists
+        SongNodeList *playlistOneByIdLinkedList = nullptr;
+        SongNodeList *playlistTwoByIdLinkedList = nullptr;
+        SongNodeList *playlistOneByPlayCountLinkedList = nullptr;
+        SongNodeList *playlistTwoByPlayCountLinkedList = nullptr;
+        SongNodeList *mergedSongsById = nullptr;
+        SongNodeList *mergedSongsByPlayCount = nullptr;
+        SongTreePlaylist *newSongsByIdTree = nullptr;
+        PlayCountNode *newSongsByPlayCountTree = nullptr;
 
+        // Get songs from both playlists
+        playlistOneByIdLinkedList = playlistOne->getSongsByIdTree()->toLinkedList();
+        playlistTwoByIdLinkedList = playlistTwo->getSongsByIdTree()->toLinkedList();
 
-        // merge arrays to one array
-        SongNodeList *mergedSongsById = mergeSongLinkedListsById(playlistOneByIdLinkedList,
-                                                                 playlistTwoByIdLinkedList);
+        if (!playlistOneByIdLinkedList && !playlistTwoByIdLinkedList) {
+            return StatusType::SUCCESS; // Both lists are empty
+        }
 
+        // Merge arrays by song ID
+        mergedSongsById = mergeSongLinkedListsById(playlistOneByIdLinkedList, playlistTwoByIdLinkedList);
 
-        // create almost empty SongTreePlaylist Tree (with n1+n2 nodes)
+        // Count merged songs
         int newSongsAmount = 0;
         SongNodeList *mergedSongsIterator = mergedSongsById;
         while (mergedSongsIterator) {
             newSongsAmount++;
             mergedSongsIterator = mergedSongsIterator->next;
-
         }
 
-        SongTreePlaylist *newSongsByIdTree = new SongTreePlaylist(newSongsAmount);
-
-        // traverse Tree inorder and insert songs pointers
+        // Create new song tree by ID
+        newSongsByIdTree = new SongTreePlaylist(newSongsAmount);
         newSongsByIdTree->populateTree(mergedSongsById);
 
-        // ======================== songsByPlayCountTree ========================
-        // TODO: !!! FIGURE OUT HOW TO REMOVE DUPLICATES - CONSIDER BUILDING THEM ALREADY SORTED BY ID (AFTER COUNT)!!!
-        // convert song trees to Song* arrays sorted by countPlay
-        SongNodeList *playlistOneByPlayCountLinkedList = playlistOne->getAVLPlayCount()->toLinkedList();
-        SongNodeList *playlistTwoByPlayCountLinkedList = playlistTwo->getAVLPlayCount()->toLinkedList();
+        // Get songs by play count
+        playlistOneByPlayCountLinkedList = playlistOne->getAVLPlayCount()->toLinkedList();
+        playlistTwoByPlayCountLinkedList = playlistTwo->getAVLPlayCount()->toLinkedList();
 
-        // merge arrays to one array
-        SongNodeList *mergedSongsByPlayCount = mergeSongLinkedListsByPlayCount(playlistOneByPlayCountLinkedList,
-                                                                               playlistTwoByPlayCountLinkedList
-        );
+        // Merge arrays by play count
+        mergedSongsByPlayCount = mergeSongLinkedListsByPlayCount(playlistOneByPlayCountLinkedList,
+                                                                 playlistTwoByPlayCountLinkedList);
 
-
-        // create almost empty SongTreePlaylist Tree (with n1+n2 nodes)
-        PlayCountNode *newSongsByPlayCountTree = new PlayCountNode(newSongsAmount);
-
-
-        // traverse Tree inorder and insert songs pointers
+        // Create new play count tree
+        newSongsByPlayCountTree = new PlayCountNode(newSongsAmount);
         newSongsByPlayCountTree->populateCountNodeTree(mergedSongsByPlayCount);
 
-        // ======================== merge linked lists ========================
-        // TODO: consider just creating a new list since in this methods, if a song is in 2 of the playlists it will have 2 nodes in the list
-        playlistTwo->setListHead(mergedSongsById);
-        // TODO: ADD TAIL SETTING, MAYBE RETURN A POINTER TO TAIL WHEN CREATING THE LIST
+        // Find the tail of the merged list
+        SongNodeList *tail = mergedSongsById;
+        while (tail && tail->next) {
+            tail = tail->next;
+        }
 
-        // ======================== Set playlistOne properties to newly created objects ========================
-        playlistOneNode->playlist_ptr->setSongsByIdTree(newSongsByIdTree);
-        playlistOneNode->playlist_ptr->setAVLPlayCount(newSongsByPlayCountTree);
-        playlistOneNode->playlist_ptr->setNumOfSongs(newSongsByPlayCountTree->height);
+        // Update playlist1's data structures
+        playlistOne->setSongsByIdTree(newSongsByIdTree);
+        playlistOne->setAVLPlayCount(newSongsByPlayCountTree);
+        playlistOne->setNumOfSongs(newSongsAmount);
+        playlistOne->setListHead(mergedSongsById);
+        playlistOne->setListTail(tail);
+
+        // Clean up temporary lists
+        SongNodeList *current = playlistOneByIdLinkedList;
+        while (current) {
+            SongNodeList *next = current->next;
+            delete current;
+            current = next;
+        }
+
+        current = playlistTwoByIdLinkedList;
+        while (current) {
+            SongNodeList *next = current->next;
+            delete current;
+            current = next;
+        }
+
+        current = playlistOneByPlayCountLinkedList;
+        while (current) {
+            SongNodeList *next = current->next;
+            delete current;
+            current = next;
+        }
+
+        current = playlistTwoByPlayCountLinkedList;
+        while (current) {
+            SongNodeList *next = current->next;
+            delete current;
+            current = next;
+        }
+
+        current = mergedSongsByPlayCount;
+        while (current) {
+            SongNodeList *next = current->next;
+            delete current;
+            current = next;
+        }
+
+        // Remove playlist2 from the tree
+        this->playlist = this->playlist->deleteNode(this->playlist, playlistId2);
+
+        return StatusType::SUCCESS;
     }
-
-    catch (const std::bad_alloc &exc) { // TODO: COMPLETE
+    catch (const std::bad_alloc &exc) {
+        // Clean up any allocated memory before returning error
         return StatusType::ALLOCATION_ERROR;
     }
-
-
-
-
-    // TODO: DELETE
-//    playListOne->getListTTail()->next = playlistTwo->getListHead();
-//    playlistTwo->setListHead(nullptr);
-//    playlistTwo->setListTail(nullptr);
-
-    // ======================== remove playlistTwoNode and delete playlistTwo ========================
-    this->playlist->deleteNode(this->playlist, playlistId2);
-
-
-    return StatusType::SUCCESS;
-
 }

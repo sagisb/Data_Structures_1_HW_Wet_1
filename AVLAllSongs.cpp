@@ -117,6 +117,79 @@ void AVLAllSongs::destroyAVLTree(AVLAllSongs *root) {
     }
 }
 
-void AVLAllSongs::removeNode(int removedSongId) {
 
+AVLAllSongs *AVLAllSongs::getMinValueNode(AVLAllSongs *node) {
+    AVLAllSongs *current = node;
+    while (current && current->left != nullptr)
+        current = current->left;
+    return current;
+}
+
+AVLAllSongs *AVLAllSongs::deleteNode(AVLAllSongs *root, int songId) {
+    if (!root) return nullptr;
+
+    if (songId < root->songId) {
+        root->left = deleteNode(root->left, songId);
+    } else if (songId > root->songId) {
+        root->right = deleteNode(root->right, songId);
+    } else {
+        if (!root->left || !root->right) {
+            AVLAllSongs *temp = root->left ? root->left : root->right;
+            root->left = root->right = nullptr;
+            delete root;
+            return temp;
+        } else {
+            AVLAllSongs *successor = getMinValueNode(root->right);
+            root->songId = successor->songId;
+
+            delete root->song_ptr;
+            root->song_ptr = successor->song_ptr;
+            successor->song_ptr = nullptr;
+
+            root->right = deleteNode(root->right, successor->songId);
+        }
+    }
+
+    updateHeight(root);
+    int balance = getBalanceFactor(root);
+
+    if (balance > 1 && getBalanceFactor(root->left) >= 0)
+        return rotateRight(root);
+    if (balance > 1 && getBalanceFactor(root->left) < 0) {
+        root->left = rotateLeft(root->left);
+        return rotateRight(root);
+    }
+    if (balance < -1 && getBalanceFactor(root->right) <= 0)
+        return rotateLeft(root);
+    if (balance < -1 && getBalanceFactor(root->right) > 0) {
+        root->right = rotateRight(root->right);
+        return rotateLeft(root);
+    }
+
+    return root;
+}
+
+void AVLAllSongs::removeNode(int removedSongId) {
+    AVLAllSongs *newRoot = deleteNode(this, removedSongId);
+
+    if (newRoot != this) {
+        if (newRoot) {
+            this->songId = newRoot->songId;
+            this->song_ptr = newRoot->song_ptr;
+            this->left = newRoot->left;
+            this->right = newRoot->right;
+            this->height = newRoot->height;
+
+            newRoot->song_ptr = nullptr;
+            newRoot->left = newRoot->right = nullptr;
+            delete newRoot;
+        } else {
+
+            delete this->song_ptr;
+            this->song_ptr = nullptr;
+            this->left = this->right = nullptr;
+            this->height = 0;
+            this->songId = -1;
+        }
+    }
 }

@@ -1,11 +1,10 @@
 #include "AVLPlaylist.h"
 
-AVLPlaylist::AVLPlaylist(int id) :
-        playlistId(id),
-        playlist_ptr(new Playlist(id)),
-        left(nullptr),
-        right(nullptr),
-        height(1) {}
+AVLPlaylist::AVLPlaylist(int id) : playlistId(id),
+                                   playlist_ptr(new Playlist(id)),
+                                   left(nullptr),
+                                   right(nullptr),
+                                   height(1) {}
 
 AVLPlaylist::~AVLPlaylist() {
     delete playlist_ptr;
@@ -123,71 +122,68 @@ bool AVLPlaylist::playlistExists(AVLPlaylist *current_root, int searchId) const 
     return false;
 }
 
-AVLPlaylist *AVLPlaylist::deleteNode(AVLPlaylist *current_root, int IdToDelete) {
-    if (current_root == nullptr) {
-        return current_root;
-    }
+AVLPlaylist *AVLPlaylist::deleteNode(AVLPlaylist *root, int idToDelete) {
+    if (root == nullptr)
+        return nullptr;
 
-    if (IdToDelete < current_root->playlistId) {
-        current_root->left = deleteNode(current_root->left, IdToDelete);
-    } else if (IdToDelete > current_root->playlistId) {
-        current_root->right = deleteNode(current_root->right, IdToDelete);
+    if (idToDelete < root->playlistId) {
+        root->left = deleteNode(root->left, idToDelete);
+    } else if (idToDelete > root->playlistId) {
+        root->right = deleteNode(root->right, idToDelete);
     } else {
-        if (current_root->left == nullptr || current_root->right == nullptr) {
-            AVLPlaylist *temp = current_root->left ? current_root->left : current_root->right;
+        // Found the node to delete
+        if (root->left == nullptr || root->right == nullptr) {
+            AVLPlaylist *child = root->left ? root->left : root->right;
 
-            if (temp == nullptr) {
-                temp = current_root;
-                current_root = nullptr;
-            } else {
-                AVLPlaylist *node_to_free = current_root;
-                current_root = temp;
-                temp = node_to_free;
-            }
+            // Disconnect children to prevent recursive deletion
+            root->left = nullptr;
+            root->right = nullptr;
 
-            delete temp;
+            // Free this node
+            delete root;
+            return child; // may be nullptr
         } else {
-            AVLPlaylist *successor = getMinValueNode(current_root->right);
+            // Two children — replace with in-order successor
+            AVLPlaylist *successor = getMinValueNode(root->right);
 
-            current_root->playlistId = successor->playlistId;
+            // Move successor's data into current node
+            root->playlistId = successor->playlistId;
 
+            // Delete the current playlist and take over the successor's one
+            delete root->playlist_ptr;
+            root->playlist_ptr = successor->playlist_ptr;
+            successor->playlist_ptr = nullptr; // avoid double free
 
-            delete current_root->playlist_ptr;
-            current_root->playlist_ptr = successor->playlist_ptr;
-            successor->playlist_ptr = nullptr;
-
-            current_root->right = deleteNode(current_root->right, successor->playlistId);
+            // Delete the duplicate node from the right subtree
+            root->right = deleteNode(root->right, successor->playlistId);
         }
     }
 
-    if (current_root == nullptr) {
-        return current_root;
+    // Update height and rebalance
+    updateHeight(root);
+    int balance = getBalanceFactor(root);
+
+    // Left-heavy
+    if (balance > 1) {
+        if (getBalanceFactor(root->left) >= 0) {
+            return rotateRight(root);
+        } else {
+            root->left = rotateLeft(root->left);
+            return rotateRight(root);
+        }
     }
 
-    updateHeight(current_root);
-
-    int balance = getBalanceFactor(current_root);
-
-
-    if (balance > 1 && getBalanceFactor(current_root->left) >= 0) {
-        return rotateRight(current_root);
+    // Right-heavy
+    if (balance < -1) {
+        if (getBalanceFactor(root->right) <= 0) {
+            return rotateLeft(root);
+        } else {
+            root->right = rotateRight(root->right);
+            return rotateLeft(root);
+        }
     }
 
-    if (balance > 1 && getBalanceFactor(current_root->left) < 0) {
-        current_root->left = rotateLeft(current_root->left);
-        return rotateRight(current_root);
-    }
-
-    if (balance < -1 && getBalanceFactor(current_root->right) <= 0) {
-        return rotateLeft(current_root);
-    }
-
-    if (balance < -1 && getBalanceFactor(current_root->right) > 0) {
-        current_root->right = rotateRight(current_root->right);
-        return rotateLeft(current_root);
-    }
-
-    return current_root;
+    return root;
 }
 
 AVLPlaylist *AVLPlaylist::getMinValueNode(AVLPlaylist *node) {

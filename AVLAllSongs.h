@@ -34,4 +34,8 @@ private:
     int getBalanceFactor(AVLAllSongs *node) const;
 
     void updateHeight(AVLAllSongs *node);
+
+    AVLAllSongs *getMinValueNode(AVLAllSongs *node);
+
+    AVLAllSongs *deleteNode(AVLAllSongs *root, int songId);
 };

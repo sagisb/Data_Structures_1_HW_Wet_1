@@ -172,7 +172,7 @@ output_t<int> DSpotify::get_by_plays(int playlistId, int plays) {
         return StatusType::FAILURE;
     }
 
-    Song *closestSongByPlays = relevantPlaylistNode->playlist_ptr->getSongByPlayCount(plays); // TODO: implement
+    Song *closestSongByPlays = relevantPlaylistNode->playlist_ptr->getSongByPlayCount(plays);
     if (!closestSongByPlays) {
         return StatusType::FAILURE;
     }
@@ -199,10 +199,25 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firsList, SongNodeList *sec
             firstListIterator = firstListIterator->next;
             secondListIterator = secondListIterator->next;
         }
+        listIterator = listIterator->next;
+    }
+
+    while (firstListIterator) {
+        listIterator->next = new SongNodeList(firstListIterator->songPtr);
+        firstListIterator = firstListIterator->next;
+        listIterator = listIterator->next;
+    }
+
+    while (secondListIterator) {
+        listIterator->next = new SongNodeList(secondListIterator->songPtr);
+        secondListIterator = secondListIterator->next;
+        listIterator = listIterator->next;
     }
 
     mergedList = mergedList->next;
+    SongNodeList *dummy = mergedList->prev;
     mergedList->prev = nullptr;
+    delete dummy;
     return mergedList;
 }
 
@@ -226,10 +241,25 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firsList, SongNodeLi
             firstListIterator = firstListIterator->next;
             secondListIterator = secondListIterator->next;
         }
+        listIterator = listIterator->next;
+    }
+
+    while (firstListIterator) {
+        listIterator->next = new SongNodeList(firstListIterator->songPtr);
+        firstListIterator = firstListIterator->next;
+        listIterator = listIterator->next;
+    }
+
+    while (secondListIterator) {
+        listIterator->next = new SongNodeList(secondListIterator->songPtr);
+        secondListIterator = secondListIterator->next;
+        listIterator = listIterator->next;
     }
 
     mergedList = mergedList->next;
+    SongNodeList *dummy = mergedList->prev;
     mergedList->prev = nullptr;
+    delete dummy;
     return mergedList;
 }
 
@@ -258,9 +288,6 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
     }
 
     try {
-
-
-
         // ======================== songsByIdTree ========================
         // convert song trees to Song* arrays sorted by songId
         SongNodeList *playlistOneByIdLinkedList = playlistOne->getSongsByIdTree()->toLinkedList();
@@ -273,7 +300,14 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
 
 
         // create almost empty SongTreePlaylist Tree (with n1+n2 nodes)
-        int newSongsAmount = playlistOne->getNumOfSongs() + playlistTwo->getNumOfSongs();
+        int newSongsAmount = 0;
+        SongNodeList *mergedSongsIterator = mergedSongsById;
+        while (mergedSongsIterator) {
+            newSongsAmount++;
+            mergedSongsIterator = mergedSongsIterator->next;
+
+        }
+
         SongTreePlaylist *newSongsByIdTree = new SongTreePlaylist(newSongsAmount);
 
         // traverse Tree inorder and insert songs pointers
@@ -296,7 +330,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
 
 
         // traverse Tree inorder and insert songs pointers
-        newSongsByPlayCountTree->populateCountNodeTree(newSongsByPlayCountTree, mergedSongsByPlayCount);
+        newSongsByPlayCountTree->populateCountNodeTree(mergedSongsByPlayCount);
 
         // ======================== merge linked lists ========================
         // TODO: consider just creating a new list since in this methods, if a song is in 2 of the playlists it will have 2 nodes in the list

@@ -4,20 +4,36 @@
 PlayCountNode::PlayCountNode(int count, Song *s) :
         playCount(count), songPtr(s), left(nullptr), right(nullptr), height(1) {}
 
-void getLinkedListFromPlayCountNode(PlayCountNode *root, SongNodeList *listIterator) {
+void getLinkedListFromPlayCountNode(PlayCountNode *node,
+                                    SongNodeList *&head,
+                                    SongNodeList *&tail) {
+    if (!node) return;
 
+    getLinkedListFromPlayCountNode(node->left, head, tail);
+
+    SongNodeList *curr = new SongNodeList(node->songPtr);
+    if (!head)
+        head = curr;
+    if (tail) {
+        tail->next = curr;
+        curr->prev = tail;
+    }
+    tail = curr;
+
+    getLinkedListFromPlayCountNode(node->right, head, tail);
 }
 
 SongNodeList *PlayCountNode::toLinkedList() {
-    if (this->songPtr == nullptr) {
-        return nullptr;
+
+    SongNodeList *head = nullptr;
+    SongNodeList *tail = nullptr;
+    try {
+        getLinkedListFromPlayCountNode(this, head, tail);
     }
-    SongNodeList *head = new SongNodeList(nullptr);
-    getLinkedListFromPlayCountNode(this, head);
-    SongNodeList *dummy = head;
-    head = head->next;
-    head->prev = nullptr;
-    delete dummy;
+    catch (...) {
+        delete head;
+        throw;
+    }
     return head;
 }
 
@@ -36,37 +52,58 @@ PlaylistTreeNode *createAlmostEmptyTree(int nodesAmount) {
 }
 
 PlayCountNode::PlayCountNode(int nodesAmount) {
+    if (!nodesAmount) {
+        return;
+    }
     this->songPtr = nullptr;
     this->playCount = 0;
     int nodesRemainingAmount = nodesAmount - 1;
-    int nodesToLeftAmount = (nodesAmount / 2) + (nodesRemainingAmount % 2);
-    int nodesToRightAmount = (nodesAmount / 2);
-    if (nodesToLeftAmount > 0) { this->left = new PlayCountNode(nodesToLeftAmount); }
-    if (nodesToRightAmount > 0) { this->right = new PlayCountNode(nodesToRightAmount); }
-    this->height = (this->left->height > this->right->height ? this->left->height : this->right->height) + 1;
+    int nodesToLeftAmount = (nodesRemainingAmount / 2) + (nodesRemainingAmount % 2);
+    int nodesToRightAmount = (nodesRemainingAmount / 2);
+    int leftHeight, rightHeight;
+    if (nodesToLeftAmount > 0) {
+        this->left = new PlayCountNode(nodesToLeftAmount);
+        leftHeight = this->left->height + 1;
+    } else {
+        leftHeight = 0;
+        this->left = nullptr;
+    }
+    if (nodesToRightAmount > 0) {
+        this->right = new PlayCountNode(nodesToRightAmount);
+        rightHeight = this->right->height + 1;
+    } else {
+        rightHeight = 0;
+        this->right = nullptr;
+    }
+
+    if (!this->left && !this->right) {
+        this->height = 0;
+    } else {
+        this->height = (leftHeight > rightHeight ? leftHeight : rightHeight) + 1;
+    }
 }
 
-void PlayCountNode::populateCountNodeTree(PlayCountNode *root,
-                                          SongNodeList *songsList) { // TODO: consider removing first argument
+void PlayCountNode::populateCountNodeTree(SongNodeList *songsList) { // TODO: consider removing first argument
     SongNodeList *listIterator = songsList;
-    if (this->left) { populateCountNodeTree(this->left, listIterator); }
+
+    if (this->left) { this->left->populateCountNodeTree(listIterator); }
 
     listIterator = listIterator->next;
-    root->songPtr = listIterator->songPtr;
-    root->playCount = listIterator->songPtr->getCountPlayed();
+    this->songPtr = listIterator->songPtr;
+    this->playCount = listIterator->songPtr->getCountPlayed();
 
     listIterator = listIterator->next;
-    if (this->right) { populateCountNodeTree(root->right, listIterator); }
-
+    if (this->right) { this->right->populateCountNodeTree(listIterator); }
 
 }
 
 PlayCountNode *PlayCountNode::findMinimalUpperPlayCount(int desiredPlayCount) {
     // TODO: implement better
-    PlayCountNode *minPlayCountNode = this;
-    if (this->playCount > desiredPlayCount && this->left) {
+    PlayCountNode *minPlayCountNode = this->playCount > desiredPlayCount ? this : nullptr;
+    if (this->playCount >= desiredPlayCount && this->left) {
+
         PlayCountNode *leftPlayCountNode = this->left->findMinimalUpperPlayCount(desiredPlayCount);
-        if ((leftPlayCountNode && leftPlayCountNode->playCount < minPlayCountNode->playCount &&
+        if ((leftPlayCountNode && leftPlayCountNode->playCount < this->playCount &&
              leftPlayCountNode->playCount > desiredPlayCount)
 
             || (leftPlayCountNode && leftPlayCountNode->playCount == this->playCount &&
@@ -76,11 +113,12 @@ PlayCountNode *PlayCountNode::findMinimalUpperPlayCount(int desiredPlayCount) {
     }
     if (this->right) {
         PlayCountNode *rightPlayCountNode = this->right->findMinimalUpperPlayCount(desiredPlayCount);
-        if ((rightPlayCountNode && rightPlayCountNode->playCount < minPlayCountNode->playCount &&
+        if (!minPlayCountNode
+            || (rightPlayCountNode && rightPlayCountNode->playCount < minPlayCountNode->playCount &&
                 rightPlayCountNode->playCount > desiredPlayCount)
 
-            || (rightPlayCountNode && rightPlayCountNode->playCount == this->playCount &&
-                rightPlayCountNode->songPtr->getSongId() < this->songPtr->getSongId())) {
+            || (rightPlayCountNode && rightPlayCountNode->playCount == minPlayCountNode->playCount &&
+                rightPlayCountNode->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId())) {
             minPlayCountNode = rightPlayCountNode;
         }
     }
@@ -425,15 +463,18 @@ void Playlist::removeFromList(int song_id_to_remove) {
 void Playlist::destroyList(SongNodeList *head_node) {
     SongNodeList *current = songListHead;
     while (current) {
-        SongNodeList *nextNode = current->next;
+        SongNodeList *next = current->next;
         delete current;
-        current = nextNode;
+        current = next;
     }
     songListHead = nullptr;
     songListTail = nullptr;
 }
 
 Song *Playlist::getSongByPlayCount(int playCount) const {
+    if (!this->AVLPlayCount) {
+        return nullptr;
+    }
     PlayCountNode *desiredNode = this->AVLPlayCount->findMinimalUpperPlayCount(playCount);
     return desiredNode ? desiredNode->songPtr : nullptr;
 }
@@ -475,3 +516,4 @@ SongTreePlaylist *Playlist::getSongsByIdTree() {
 PlayCountNode *Playlist::getAVLPlayCount() {
     return this->AVLPlayCount;
 }
+

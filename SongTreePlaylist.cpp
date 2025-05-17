@@ -3,7 +3,8 @@
 #include <iostream>
 
 PlaylistTreeNode::PlaylistTreeNode(Song *song, SongNodeList *node)
-        : songId(song->getSongId()), songPtr(song), linkedListNodePtr(node), left(nullptr), right(nullptr), height(1) {}
+        : songId(song ? song->getSongId() : -1), songPtr(song), linkedListNodePtr(node), left(nullptr), right(nullptr),
+          height(1) {}
 
 SongTreePlaylist::SongTreePlaylist() : root(nullptr) {}
 
@@ -180,7 +181,7 @@ void SongTreePlaylist::removeSong(int song_id_to_delete) {
     root = deleteNode(root, song_id_to_delete);
 }
 
-void getLinkedListFromPlaylistTreeNode(PlaylistTreeNode *root, SongNodeList *&listIterator) {
+void getLinkedListFromPlaylistTreeNode(PlaylistTreeNode *root, SongNodeList **listIterator) {
     if (root == nullptr) {
         return;
     }
@@ -188,11 +189,11 @@ void getLinkedListFromPlaylistTreeNode(PlaylistTreeNode *root, SongNodeList *&li
     try {
         SongNodeList *currentSong = new SongNodeList(root->songPtr);
         if (listIterator) {
-            listIterator->next = currentSong;
+            (*listIterator)->next = currentSong;
         } else {
-            listIterator = currentSong;
+            (*listIterator) = currentSong;
         }
-        listIterator = listIterator->next;
+        (*listIterator) = (*listIterator)->next;
         getLinkedListFromPlaylistTreeNode(root->right, listIterator);
     }
     catch (const std::bad_alloc &exc) {
@@ -201,16 +202,36 @@ void getLinkedListFromPlaylistTreeNode(PlaylistTreeNode *root, SongNodeList *&li
     }
 }
 
-SongNodeList *SongTreePlaylist::toLinkedList() {
-    if (this->root == nullptr) {
-        return nullptr;
+void treeToList(PlaylistTreeNode *node,
+                SongNodeList *&head,
+                SongNodeList *&tail) {
+    if (!node) return;
+
+    treeToList(node->left, head, tail);
+
+    SongNodeList *curr = new SongNodeList(node->songPtr);
+    if (!head)
+        head = curr;
+    if (tail) {
+        tail->next = curr;
+        curr->prev = tail;
     }
-    SongNodeList *head = new SongNodeList(nullptr);
-    getLinkedListFromPlaylistTreeNode(this->root, head);
-    SongNodeList *dummy = head;
-    head = head->next;
-    head->prev = nullptr;
-    delete dummy;
+    tail = curr;
+
+    treeToList(node->right, head, tail);
+}
+
+
+SongNodeList *SongTreePlaylist::toLinkedList() {
+    SongNodeList *head = nullptr;
+    SongNodeList *tail = nullptr;
+    try {
+        treeToList(this->root, head, tail);
+    }
+    catch (...) {
+        delete head;
+        throw;
+    }
     return head;
 }
 
@@ -219,14 +240,14 @@ PlaylistTreeNode *SongTreePlaylist::getRoot() {
 }
 
 PlaylistTreeNode *createAlmostEmptySongTree(int nodesAmount) {
-    if (nodesAmount == 0) {
+    if (nodesAmount <= 0) {
         return nullptr;
     }
 
     PlaylistTreeNode *root = new PlaylistTreeNode(nullptr, nullptr);
     int nodesRemainingAmount = nodesAmount - 1;
-    int nodesToLeftAmount = (nodesAmount / 2) + (nodesRemainingAmount % 2);
-    int nodesToRightAmount = (nodesAmount / 2);
+    int nodesToLeftAmount = (nodesRemainingAmount / 2) + (nodesRemainingAmount % 2);
+    int nodesToRightAmount = (nodesRemainingAmount / 2);
     root->left = createAlmostEmptySongTree(nodesToLeftAmount);
     root->right = createAlmostEmptySongTree(nodesToRightAmount);
     return root;

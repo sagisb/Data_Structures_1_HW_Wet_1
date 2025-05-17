@@ -100,7 +100,7 @@ struct PlayCountNode {
 
     SongNodeList *toLinkedList();
 
-    void populateCountNodeTree(PlayCountNode *root, SongNodeList *songsList);
+    void populateCountNodeTree(SongNodeList *songsList);
 
     PlayCountNode *findMinimalUpperPlayCount(int playCount);
 };
@@ -113,15 +113,9 @@ struct SongNodeList {
     explicit SongNodeList(Song *song);
 
     ~SongNodeList() {
-        SongNodeList *p = next;
-        while (p) {
-            SongNodeList *tmp = p->next;
-            p->next = nullptr;
-            p->prev = nullptr;
-            delete p;
-            p = tmp;
-        }
-        next = prev = nullptr;
+        next = nullptr;
+        prev = nullptr;
         songPtr = nullptr;
     }
 };
+

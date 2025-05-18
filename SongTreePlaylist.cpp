@@ -221,7 +221,6 @@ void treeToList(PlaylistTreeNode *node,
     treeToList(node->right, head, tail);
 }
 
-
 SongNodeList *SongTreePlaylist::toLinkedList() {
     SongNodeList *head = nullptr;
     SongNodeList *tail = nullptr;
@@ -257,20 +256,27 @@ SongTreePlaylist::SongTreePlaylist(int nodesAmount) {
     this->root = createAlmostEmptySongTree(nodesAmount);
 }
 
-void populateSongsTree(PlaylistTreeNode *root, SongNodeList *songsList, int height) {
-    if (!root) { return; }
-    SongNodeList *listIterator = songsList;
-    populateSongsTree(root->left, listIterator, height + 1);
-    listIterator = listIterator->next;
+void populateSongsTree(PlaylistTreeNode *root, SongNodeList *&songsList, int height) {
+    if (!root || !songsList) {
+        return;
+    }
 
-    root->songPtr = listIterator->songPtr;
-    root->songId = listIterator->songPtr->getSongId();
+    // Process left subtree
+    populateSongsTree(root->left, songsList, height + 1);
+
+    // Process current node
+    root->songPtr = songsList->songPtr;
+    root->songId = songsList->songPtr->getSongId();
     root->height = height;
 
-    listIterator = listIterator->next;
-    populateSongsTree(root->right, listIterator, height + 1);
+    // Move to next song in the list
+    songsList = songsList->next;
+
+    // Process right subtree
+    populateSongsTree(root->right, songsList, height + 1);
 }
 
 void SongTreePlaylist::populateTree(SongNodeList *songsList) {
-    populateSongsTree(this->root, songsList, 0);
+    SongNodeList *currentSong = songsList;
+    populateSongsTree(this->root, currentSong, 0);
 }

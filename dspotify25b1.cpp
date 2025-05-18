@@ -224,14 +224,20 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firsList, SongNodeList *sec
     return mergedList;
 }
 
-// TODO: I know this is a huge duplication with "mergeSongLinkedListsById" but the alternative is a make a generic tree class
-// create a linked list of songs by id without duplicates
+// create a linked list of songs sorted by play count, and then song ID
 SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firsList, SongNodeList *secondList) {
-    SongNodeList *mergedList = new SongNodeList(
-            nullptr); // initiate to dummy node to avoid annoying "if (mergedList)" checks
+    // Handle null cases
+    if (!firsList)
+        return secondList;
+    if (!secondList)
+        return firsList;
+
+    SongNodeList *mergedList = new SongNodeList(nullptr); // dummy head node
     SongNodeList *listIterator = mergedList;
     SongNodeList *firstListIterator = firsList;
     SongNodeList *secondListIterator = secondList;
+
+    // Merge the two lists
     while (firstListIterator && secondListIterator) {
         if (firstListIterator->songPtr->getCountPlayed() < secondListIterator->songPtr->getCountPlayed()) {
             listIterator->next = new SongNodeList(firstListIterator->songPtr);
@@ -239,35 +245,53 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firsList, SongNodeLi
         } else if (firstListIterator->songPtr->getCountPlayed() > secondListIterator->songPtr->getCountPlayed()) {
             listIterator->next = new SongNodeList(secondListIterator->songPtr);
             secondListIterator = secondListIterator->next;
-        } else if (firstListIterator->songPtr->getCountPlayed() == secondListIterator->songPtr->getCountPlayed()) {
-            if (firstListIterator->songPtr->getSongId() <= secondListIterator->songPtr->getSongId()) {
+        } else { // Equal play counts, sort by song ID
+            if (firstListIterator->songPtr->getSongId() == secondListIterator->songPtr->getSongId()) {
+                secondListIterator = secondListIterator->next;
+            } else if (firstListIterator->songPtr->getSongId() < secondListIterator->songPtr->getSongId()) {
                 listIterator->next = new SongNodeList(firstListIterator->songPtr);
+
                 firstListIterator = firstListIterator->next;
             } else {
                 listIterator->next = new SongNodeList(secondListIterator->songPtr);
                 secondListIterator = secondListIterator->next;
             }
         }
-        listIterator = listIterator->next;
+
+        if (listIterator->next) {
+            listIterator->next->prev = listIterator;
+            listIterator = listIterator->next;
+        }
     }
 
+    // Add remaining elements from first list
     while (firstListIterator) {
         listIterator->next = new SongNodeList(firstListIterator->songPtr);
+        if (listIterator->next) {
+            listIterator->next->prev = listIterator;
+            listIterator = listIterator->next;
+        }
         firstListIterator = firstListIterator->next;
-        listIterator = listIterator->next;
     }
 
+    // Add remaining elements from second list
     while (secondListIterator) {
         listIterator->next = new SongNodeList(secondListIterator->songPtr);
+        if (listIterator->next) {
+            listIterator->next->prev = listIterator;
+            listIterator = listIterator->next;
+        }
         secondListIterator = secondListIterator->next;
-        listIterator = listIterator->next;
     }
 
-    mergedList = mergedList->next;
-    SongNodeList *dummy = mergedList->prev;
-    mergedList->prev = nullptr;
-    delete dummy;
-    return mergedList;
+    // Remove the dummy head
+    SongNodeList *result = mergedList->next;
+    if (result) {
+        result->prev = nullptr;
+    }
+    delete mergedList;
+
+    return result;
 }
 
 StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
@@ -301,7 +325,9 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
             // Create a deep copy of playlist2's play count tree
             SongNodeList *playlist2SongsByCount = playlistTwo->getAVLPlayCount()->toLinkedList();
             PlayCountNode *newCountTree = new PlayCountNode(playlistTwo->getNumOfSongs());
-            newCountTree->populateCountNodeTree(playlist2SongsByCount);
+            // Make a copy of the pointer since it'll be modified by populateCountNodeTree
+            SongNodeList *tempCountList = playlist2SongsByCount;
+            newCountTree->populateCountNodeTree(tempCountList);
 
             // Set playlist1's data structures
             playlistOne->setSongsByIdTree(newTree);
@@ -398,7 +424,9 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
 
         // Create new play count tree
         newSongsByPlayCountTree = new PlayCountNode(newSongsAmount);
-        newSongsByPlayCountTree->populateCountNodeTree(mergedSongsByPlayCount);
+        // Make a copy of the merged list pointer, since it'll be modified during populateCountNodeTree
+        SongNodeList *tempPlayCountList = mergedSongsByPlayCount;
+        newSongsByPlayCountTree->populateCountNodeTree(tempPlayCountList);
 
         // Find the tail of the merged list
         SongNodeList *tail = mergedSongsById;

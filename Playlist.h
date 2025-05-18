@@ -1,6 +1,6 @@
 #pragma once
 
-//#include "Song.h"
+// #include "Song.h"
 #include "SongTreePlaylist.h"
 
 struct PlayCountNode;
@@ -14,7 +14,6 @@ private:
     PlayCountNode *AVLPlayCount;
     SongNodeList *songListHead;
     SongNodeList *songListTail;
-
 
 public:
     explicit Playlist(int id);
@@ -57,7 +56,6 @@ public:
 
     PlayCountNode *getAVLPlayCount();
 
-
 private:
     int heightPlayCount(PlayCountNode *node) const;
 
@@ -84,7 +82,7 @@ private:
     void removeFromList(int songId);
 
     void destroyList(SongNodeList *head);
-    //int getListSize() const;
+    // int getListSize() const;
 };
 
 struct PlayCountNode {
@@ -100,7 +98,7 @@ struct PlayCountNode {
 
     SongNodeList *toLinkedList();
 
-    void populateCountNodeTree(SongNodeList *songsList);
+    void populateCountNodeTree(SongNodeList *&songsList);
 
     PlayCountNode *findMinimalUpperPlayCount(int playCount);
 };
@@ -118,4 +116,3 @@ struct SongNodeList {
         songPtr = nullptr;
     }
 };
-

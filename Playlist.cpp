@@ -83,47 +83,72 @@ PlayCountNode::PlayCountNode(int nodesAmount) {
     }
 }
 
-void PlayCountNode::populateCountNodeTree(SongNodeList *songsList) { // TODO: consider removing first argument
-    SongNodeList *listIterator = songsList;
-
-    if (this->left) {
-        this->left->populateCountNodeTree(listIterator);
+void PlayCountNode::populateCountNodeTree(SongNodeList *&songsList) {
+    if (!this || !songsList) {
+        return;
     }
 
-    listIterator = listIterator->next;
-    this->songPtr = listIterator->songPtr;
-    this->playCount = listIterator->songPtr->getCountPlayed();
+    // Process left subtree first with the SAME list pointer
+    if (this->left) {
+        this->left->populateCountNodeTree(songsList);
+    }
 
-    listIterator = listIterator->next;
+    // At this point, songsList points to the current node we want to process
+    // Process current node
+    this->songPtr = songsList->songPtr;
+    this->playCount = songsList->songPtr->getCountPlayed();
+
+    // Move to next song in the list ONLY ONCE
+    songsList = songsList->next;
+
+    // Process right subtree with the updated list pointer
     if (this->right) {
-        this->right->populateCountNodeTree(listIterator);
+        this->right->populateCountNodeTree(songsList);
     }
 }
 
 PlayCountNode *PlayCountNode::findMinimalUpperPlayCount(int desiredPlayCount) {
-    // TODO: implement better
-    PlayCountNode *minPlayCountNode = this->playCount > desiredPlayCount ? this : nullptr;
-    if (this->playCount >= desiredPlayCount && this->left) {
+    // Find song with the smallest playcount >= desiredPlayCount
+    // If multiple, choose the one with the smallest song ID
 
-        PlayCountNode *leftPlayCountNode = this->left->findMinimalUpperPlayCount(desiredPlayCount);
-        if ((leftPlayCountNode && leftPlayCountNode->playCount < this->playCount &&
-             leftPlayCountNode->playCount > desiredPlayCount)
+    // Start with current node as a potential candidate if it meets criteria
+    PlayCountNode *minPlayCountNode = (this->playCount >= desiredPlayCount) ? this : nullptr;
 
-            || (leftPlayCountNode && leftPlayCountNode->playCount == this->playCount &&
-                leftPlayCountNode->songPtr->getSongId() < this->songPtr->getSongId())) {
-            minPlayCountNode = leftPlayCountNode;
+    // First check left subtree if there might be a smaller playcount that still meets criteria
+    if (this->left) {
+        PlayCountNode *leftCandidate = this->left->findMinimalUpperPlayCount(desiredPlayCount);
+
+        // Replace current candidate if left subtree has a better match
+        if (leftCandidate && (
+                // 1. We have no candidate yet, or
+                !minPlayCountNode ||
+                // 2. Left candidate has smaller playcount but still >= desired, or
+                (leftCandidate->playCount < minPlayCountNode->playCount) ||
+                // 3. Same playcount but smaller song ID
+                (leftCandidate->playCount == minPlayCountNode->playCount &&
+                 leftCandidate->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId()))) {
+            minPlayCountNode = leftCandidate;
         }
     }
+
+    // Then check right subtree which might have a playcount just above desired
     if (this->right) {
-        PlayCountNode *rightPlayCountNode = this->right->findMinimalUpperPlayCount(desiredPlayCount);
-        if (!minPlayCountNode || (rightPlayCountNode && rightPlayCountNode->playCount < minPlayCountNode->playCount &&
-                                  rightPlayCountNode->playCount > desiredPlayCount)
+        PlayCountNode *rightCandidate = this->right->findMinimalUpperPlayCount(desiredPlayCount);
 
-            || (rightPlayCountNode && rightPlayCountNode->playCount == minPlayCountNode->playCount &&
-                rightPlayCountNode->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId())) {
-            minPlayCountNode = rightPlayCountNode;
+        // Replace current candidate if right subtree has a better match
+        if (rightCandidate && (
+                // 1. We have no candidate yet, or
+                !minPlayCountNode ||
+                // 2. Right candidate has smaller playcount but still >= desired, or
+                (rightCandidate->playCount < minPlayCountNode->playCount &&
+                 rightCandidate->playCount >= desiredPlayCount) ||
+                // 3. Same playcount but smaller song ID
+                (rightCandidate->playCount == minPlayCountNode->playCount &&
+                 rightCandidate->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId()))) {
+            minPlayCountNode = rightCandidate;
         }
     }
+
     return minPlayCountNode;
 }
 

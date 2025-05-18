@@ -17,7 +17,7 @@ private:
 
 
 public:
-    Playlist(int id);
+    explicit Playlist(int id);
 
     ~Playlist();
 

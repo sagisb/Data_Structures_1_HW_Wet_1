@@ -240,9 +240,13 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firsList, SongNodeLi
             listIterator->next = new SongNodeList(secondListIterator->songPtr);
             secondListIterator = secondListIterator->next;
         } else if (firstListIterator->songPtr->getCountPlayed() == secondListIterator->songPtr->getCountPlayed()) {
-            listIterator->next = new SongNodeList(firstListIterator->songPtr);
-            firstListIterator = firstListIterator->next;
-            secondListIterator = secondListIterator->next;
+            if (firstListIterator->songPtr->getSongId() <= secondListIterator->songPtr->getSongId()) {
+                listIterator->next = new SongNodeList(firstListIterator->songPtr);
+                firstListIterator = firstListIterator->next;
+            } else {
+                listIterator->next = new SongNodeList(secondListIterator->songPtr);
+                secondListIterator = secondListIterator->next;
+            }
         }
         listIterator = listIterator->next;
     }

@@ -192,12 +192,15 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firsList, SongNodeList *sec
     while (firstListIterator && secondListIterator) {
         if (firstListIterator->songPtr->getSongId() < secondListIterator->songPtr->getSongId()) {
             listIterator->next = new SongNodeList(firstListIterator->songPtr);
+            listIterator->next->prev = listIterator; // Set prev pointer
             firstListIterator = firstListIterator->next;
         } else if (firstListIterator->songPtr->getSongId() > secondListIterator->songPtr->getSongId()) {
             listIterator->next = new SongNodeList(secondListIterator->songPtr);
+            listIterator->next->prev = listIterator; // Set prev pointer
             secondListIterator = secondListIterator->next;
         } else if (firstListIterator->songPtr->getSongId() == secondListIterator->songPtr->getSongId()) {
             listIterator->next = new SongNodeList(firstListIterator->songPtr);
+            listIterator->next->prev = listIterator; // Set prev pointer
             firstListIterator = firstListIterator->next;
             secondListIterator = secondListIterator->next;
         }
@@ -206,12 +209,14 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firsList, SongNodeList *sec
 
     while (firstListIterator) {
         listIterator->next = new SongNodeList(firstListIterator->songPtr);
+        listIterator->next->prev = listIterator; // Set prev pointer
         firstListIterator = firstListIterator->next;
         listIterator = listIterator->next;
     }
 
     while (secondListIterator) {
         listIterator->next = new SongNodeList(secondListIterator->songPtr);
+        listIterator->next->prev = listIterator; // Set prev pointer
         secondListIterator = secondListIterator->next;
         listIterator = listIterator->next;
     }
@@ -246,10 +251,12 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firsList, SongNodeLi
             secondListIterator = secondListIterator->next;
         } else { // Equal play counts, sort by song ID
             if (firstListIterator->songPtr->getSongId() == secondListIterator->songPtr->getSongId()) {
+                // Add one song and advance both pointers
+                listIterator->next = new SongNodeList(firstListIterator->songPtr);
+                firstListIterator = firstListIterator->next;
                 secondListIterator = secondListIterator->next;
             } else if (firstListIterator->songPtr->getSongId() < secondListIterator->songPtr->getSongId()) {
                 listIterator->next = new SongNodeList(firstListIterator->songPtr);
-
                 firstListIterator = firstListIterator->next;
             } else {
                 listIterator->next = new SongNodeList(secondListIterator->songPtr);

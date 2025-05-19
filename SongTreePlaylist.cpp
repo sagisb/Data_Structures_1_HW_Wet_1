@@ -37,6 +37,7 @@ void SongTreePlaylist::updateHeight(PlaylistTreeNode *node) {
 }
 
 PlaylistTreeNode *SongTreePlaylist::rotateLeft(PlaylistTreeNode *x) {
+    // AVL property guarantees x->right exists when this is called
     PlaylistTreeNode *y = x->right;
     PlaylistTreeNode *T2 = y->left;
 
@@ -50,6 +51,7 @@ PlaylistTreeNode *SongTreePlaylist::rotateLeft(PlaylistTreeNode *x) {
 }
 
 PlaylistTreeNode *SongTreePlaylist::rotateRight(PlaylistTreeNode *y) {
+    // AVL property guarantees y->left exists when this is called
     PlaylistTreeNode *x = y->left;
     PlaylistTreeNode *T2 = x->right;
 
@@ -78,17 +80,21 @@ PlaylistTreeNode *SongTreePlaylist::insert(PlaylistTreeNode *current_root, Song 
     updateHeight(current_root);
     int balance = balanceFactor(current_root);
 
+    // Check for left->left case (simple right rotation)
     if (balance > 1 && song->getSongId() < current_root->left->songId)
         return rotateRight(current_root);
 
+    // Check for right->right case (simple left rotation)
     if (balance < -1 && song->getSongId() > current_root->right->songId)
         return rotateLeft(current_root);
 
+    // Check for left->right case (left-right rotation)
     if (balance > 1 && song->getSongId() > current_root->left->songId) {
         current_root->left = rotateLeft(current_root->left);
         return rotateRight(current_root);
     }
 
+    // Check for right->left case (right-left rotation)
     if (balance < -1 && song->getSongId() < current_root->right->songId) {
         current_root->right = rotateRight(current_root->right);
         return rotateLeft(current_root);
@@ -136,17 +142,21 @@ PlaylistTreeNode *SongTreePlaylist::deleteNode(PlaylistTreeNode *current_root, i
     updateHeight(current_root);
     int balance = balanceFactor(current_root);
 
+    // Left Left Case
     if (balance > 1 && balanceFactor(current_root->left) >= 0)
         return rotateRight(current_root);
 
+    // Left Right Case
     if (balance > 1 && balanceFactor(current_root->left) < 0) {
         current_root->left = rotateLeft(current_root->left);
         return rotateRight(current_root);
     }
 
+    // Right Right Case
     if (balance < -1 && balanceFactor(current_root->right) <= 0)
         return rotateLeft(current_root);
 
+    // Right Left Case
     if (balance < -1 && balanceFactor(current_root->right) > 0) {
         current_root->right = rotateRight(current_root->right);
         return rotateLeft(current_root);
@@ -238,21 +248,42 @@ PlaylistTreeNode *SongTreePlaylist::getRoot() {
     return this->root;
 }
 
+// Function to create a perfectly balanced empty AVL tree with the specified number of nodes
 PlaylistTreeNode *createAlmostEmptySongTree(int nodesAmount) {
     if (nodesAmount <= 0) {
         return nullptr;
     }
 
+    // Create a new node
     PlaylistTreeNode *root = new PlaylistTreeNode(nullptr, nullptr);
+
+    // Calculate how many nodes should go to each subtree for perfect balance
     int nodesRemainingAmount = nodesAmount - 1;
     int nodesToLeftAmount = (nodesRemainingAmount / 2) + (nodesRemainingAmount % 2);
     int nodesToRightAmount = (nodesRemainingAmount / 2);
+
+    // Recursively create left and right subtrees
     root->left = createAlmostEmptySongTree(nodesToLeftAmount);
     root->right = createAlmostEmptySongTree(nodesToRightAmount);
+
+    // Update height based on children's heights - critical for maintaining AVL property
+    if (root->left && root->right) {
+        int leftHeight = root->left->height;
+        int rightHeight = root->right->height;
+        root->height = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+    } else if (root->left) {
+        root->height = 1 + root->left->height;
+    } else if (root->right) {
+        root->height = 1 + root->right->height;
+    } else {
+        root->height = 1;
+    }
+
     return root;
 }
 
 SongTreePlaylist::SongTreePlaylist(int nodesAmount) {
+    // Create an empty balanced tree structure
     this->root = createAlmostEmptySongTree(nodesAmount);
 }
 
@@ -261,19 +292,24 @@ void populateSongsTree(PlaylistTreeNode *root, SongNodeList *&songsList, int hei
         return;
     }
 
-    // Process left subtree
+    // Process left subtree first (in-order traversal)
     populateSongsTree(root->left, songsList, height + 1);
 
-    // Process current node
+    // Process current node - set the song data
     root->songPtr = songsList->songPtr;
     root->songId = songsList->songPtr->getSongId();
-    root->height = height;
 
     // Move to next song in the list
     songsList = songsList->next;
 
     // Process right subtree
     populateSongsTree(root->right, songsList, height + 1);
+
+    // Calculate proper height based on children, not just the level
+    // This ensures the height is correctly set for AVL balancing
+    int leftHeight = root->left ? root->left->height : 0;
+    int rightHeight = root->right ? root->right->height : 0;
+    root->height = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
 }
 
 void SongTreePlaylist::populateTree(SongNodeList *songsList) {

@@ -407,11 +407,11 @@ void Playlist::playSong(int songId) {
     Song *song_to_play = songsByIdTree->getSongById(songId);
     if (song_to_play) {
         int old_playCount = song_to_play->getCountPlayed();
-        AVLPlayCount = deleteByPlayCount(AVLPlayCount, old_playCount, songId); // שם המשתנה שונה
+        AVLPlayCount = deleteByPlayCount(AVLPlayCount, old_playCount, songId);
 
         song_to_play->increaseCountPlayed();
 
-        AVLPlayCount = insertByPlayCount(AVLPlayCount, song_to_play); // שם המשתנה שונה
+        AVLPlayCount = insertByPlayCount(AVLPlayCount, song_to_play);
     }
 }
 

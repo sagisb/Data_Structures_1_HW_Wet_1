@@ -84,8 +84,7 @@ StatusType DSpotify::add_song(int songId, int plays) {
 }
 
 StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
-    if (songId <= 0 ||
-        playlistId < 0) { // TODO: make checks for null values later to avoid time addition for duplicated operations
+    if (songId <= 0 || playlistId < 0) {
         return StatusType::INVALID_INPUT;
     }
 
@@ -97,7 +96,7 @@ StatusType DSpotify::add_to_playlist(int playlistId, int songId) {
         AVLAllSongs *relevantSongNode = this->songs->search(this->songs, songId);
         AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
 
-        if (!relevantSongNode || !relevantPlaylist) {
+        if (!relevantSongNode || !relevantPlaylist || relevantPlaylist->playlist_ptr->getSongById(songId)) {
             return StatusType::FAILURE;
         }
 

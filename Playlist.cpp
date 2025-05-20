@@ -108,48 +108,28 @@ void PlayCountNode::populateCountNodeTree(SongNodeList *&songsList) {
 }
 
 PlayCountNode *PlayCountNode::findMinimalUpperPlayCount(int desiredPlayCount) {
-    // Find song with the smallest playcount >= desiredPlayCount
-    // If multiple, choose the one with the smallest song ID
+    PlayCountNode *current = this;
+    PlayCountNode *bestCandidate = nullptr;
 
-    // Start with current node as a potential candidate if it meets criteria
-    PlayCountNode *minPlayCountNode = (this->playCount >= desiredPlayCount) ? this : nullptr;
-
-    // First check left subtree if there might be a smaller playcount that still meets criteria
-    if (this->left) {
-        PlayCountNode *leftCandidate = this->left->findMinimalUpperPlayCount(desiredPlayCount);
-
-        // Replace current candidate if left subtree has a better match
-        if (leftCandidate && (
-                // 1. We have no candidate yet, or
-                !minPlayCountNode ||
-                // 2. Left candidate has smaller playcount but still >= desired, or
-                (leftCandidate->playCount < minPlayCountNode->playCount) ||
-                // 3. Same playcount but smaller song ID
-                (leftCandidate->playCount == minPlayCountNode->playCount &&
-                 leftCandidate->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId()))) {
-            minPlayCountNode = leftCandidate;
+    while (current) {
+        // If current node meets or exceeds the desired play count
+        if (current->playCount >= desiredPlayCount) {
+            // Update best candidate if it's better than what we've found so far
+            if (!bestCandidate ||
+                current->playCount < bestCandidate->playCount ||
+                (current->playCount == bestCandidate->playCount &&
+                 current->songPtr->getSongId() < bestCandidate->songPtr->getSongId())) {
+                bestCandidate = current;
+            }
+            // Look for potentially better matches in left subtree
+            current = current->left;
+        } else {
+            // Current node's play count is too small, look in right subtree
+            current = current->right;
         }
     }
 
-    // Then check right subtree which might have a playcount just above desired
-    if (this->right) {
-        PlayCountNode *rightCandidate = this->right->findMinimalUpperPlayCount(desiredPlayCount);
-
-        // Replace current candidate if right subtree has a better match
-        if (rightCandidate && (
-                // 1. We have no candidate yet, or
-                !minPlayCountNode ||
-                // 2. Right candidate has smaller playcount but still >= desired, or
-                (rightCandidate->playCount < minPlayCountNode->playCount &&
-                 rightCandidate->playCount >= desiredPlayCount) ||
-                // 3. Same playcount but smaller song ID
-                (rightCandidate->playCount == minPlayCountNode->playCount &&
-                 rightCandidate->songPtr->getSongId() < minPlayCountNode->songPtr->getSongId()))) {
-            minPlayCountNode = rightCandidate;
-        }
-    }
-
-    return minPlayCountNode;
+    return bestCandidate;
 }
 
 SongNodeList::SongNodeList(Song *s) : songPtr(s), next(nullptr), prev(nullptr) {}
@@ -163,9 +143,14 @@ Playlist::Playlist(int id) : playlistId(id),
 }
 
 Playlist::~Playlist() {
+    // Clean up all memory in a controlled order to prevent leaks
     destroyPlayCountTree(AVLPlayCount);
     AVLPlayCount = nullptr;
+
     destroyList(songListHead);
+    songListHead = nullptr;
+    songListTail = nullptr;
+
     delete songsByIdTree;
     songsByIdTree = nullptr;
 }
@@ -372,6 +357,7 @@ void Playlist::destroyPlayCountTree(PlayCountNode *rootNode) {
     if (rootNode) {
         destroyPlayCountTree(rootNode->left);
         destroyPlayCountTree(rootNode->right);
+        // Don't delete the Song object, it's managed elsewhere
         delete rootNode;
     }
 }
@@ -397,9 +383,11 @@ void Playlist::removeSong(int songId) {
 
     int old_playCount = song_to_remove->getCountPlayed();
 
+    // First remove from trees, then from list to maintain valid pointers
     songsByIdTree->removeSong(songId);
-    removeFromList(songId);
     AVLPlayCount = deleteByPlayCount(AVLPlayCount, old_playCount, songId);
+    removeFromList(songId);
+
     numOfSongs--;
 }
 
@@ -452,13 +440,19 @@ void Playlist::appendToList(Song *song) {
     if (!song) {
         return;
     }
-    SongNodeList *newNode = new SongNodeList(song);
-    if (!songListHead) {
-        songListHead = songListTail = newNode;
-    } else {
-        songListTail->next = newNode;
-        newNode->prev = songListTail;
-        songListTail = newNode;
+    try {
+        SongNodeList *newNode = new SongNodeList(song);
+        if (!songListHead) {
+            songListHead = songListTail = newNode;
+        } else {
+            songListTail->next = newNode;
+            newNode->prev = songListTail;
+            songListTail = newNode;
+        }
+    }
+    catch (const std::bad_alloc &) {
+        // If allocation fails, just propagate the exception
+        throw;
     }
 }
 
@@ -481,9 +475,13 @@ void Playlist::removeFromList(int song_id_to_remove) {
 
     if (current == songListHead) {
         songListHead = current->next;
+        if (songListHead)
+            songListHead->prev = nullptr;
     }
     if (current == songListTail) {
         songListTail = current->prev;
+        if (songListTail)
+            songListTail->next = nullptr;
     }
     if (current->prev) {
         current->prev->next = current->next;
@@ -499,7 +497,7 @@ void Playlist::removeFromList(int song_id_to_remove) {
 }
 
 void Playlist::destroyList(SongNodeList *head_node) {
-    SongNodeList *current = songListHead;
+    SongNodeList *current = head_node;
     while (current) {
         SongNodeList *next = current->next;
         delete current;

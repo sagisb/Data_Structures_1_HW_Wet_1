@@ -385,7 +385,6 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firstList, SongNodeL
         return head;
     }
     catch (const std::bad_alloc &) {
-        // Clean up on allocation failure
         cleanupLinkedList(head);
         throw;
     }

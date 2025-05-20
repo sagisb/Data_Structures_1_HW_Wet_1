@@ -40,8 +40,7 @@ StatusType DSpotify::add_playlist(int playlistId) {
             playlist = new AVLPlaylist(playlistId);
         } else {
             newPlaylist = playlist->insert(playlist, playlistId);
-            playlist = newPlaylist;
-
+            if (newPlaylist) playlist = newPlaylist;
         }
         return StatusType::SUCCESS;
     }
@@ -77,9 +76,11 @@ StatusType DSpotify::add_song(int songId, int plays) {
     if (songId <= 0 || plays < 0) {
         return StatusType::INVALID_INPUT;
     }
+
     if (songs != nullptr && songs->search(songs, songId) != nullptr) {
         return StatusType::FAILURE;
     }
+
     Song *newSongObject = nullptr;
     AVLAllSongs *newRoot = nullptr;
 
@@ -91,7 +92,7 @@ StatusType DSpotify::add_song(int songId, int plays) {
         } else {
             newRoot = this->songs->insert(this->songs, songId, newSongObject);
             if (newRoot) {
-                this->songs = newRoot;
+                this->songs = newRoot; // Tree might have been rebalanced
             }
         }
         return StatusType::SUCCESS;
@@ -135,6 +136,7 @@ StatusType DSpotify::delete_song(int songId) {
     if (!this->songs) {
         return StatusType::FAILURE;
     }
+
     AVLAllSongs *songNodeInTree = this->songs->search(this->songs, songId);
     if (!songNodeInTree || (songNodeInTree->song_ptr && songNodeInTree->song_ptr->getCountPlaylist() > 0)) {
         return StatusType::FAILURE;
@@ -148,6 +150,7 @@ StatusType DSpotify::remove_from_playlist(int playlistId, int songId) {
     if (songId <= 0 || playlistId <= 0) {
         return StatusType::INVALID_INPUT;
     }
+
     AVLPlaylist *relevantPlaylist = this->playlist->search(this->playlist, playlistId);
     if (!relevantPlaylist) {
         return StatusType::FAILURE;
@@ -229,7 +232,6 @@ SongNodeList *deepCopyLinkedList(SongNodeList *list) {
         return newHead;
     }
     catch (const std::bad_alloc &) {
-        // Clean up on allocation failure
         cleanupLinkedList(newHead);
         throw;
     }
@@ -237,7 +239,6 @@ SongNodeList *deepCopyLinkedList(SongNodeList *list) {
 
 // create a linked list of songs by id without duplicates
 SongNodeList *mergeSongLinkedListsById(SongNodeList *firstList, SongNodeList *secondList) {
-    // Handle null cases properly
     if (!firstList && !secondList)
         return nullptr;
     if (!firstList)
@@ -245,16 +246,13 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firstList, SongNodeList *se
     if (!secondList)
         return deepCopyLinkedList(firstList);
 
-    // Both lists have elements - create a new merged list
     SongNodeList *head = nullptr;
     SongNodeList *tail = nullptr;
 
-    // Temp pointers for traversing the input lists
     SongNodeList *firstCurrent = firstList;
     SongNodeList *secondCurrent = secondList;
 
     try {
-        // Merge the lists
         while (firstCurrent && secondCurrent) {
             SongNodeList *newNode = nullptr;
 
@@ -309,7 +307,6 @@ SongNodeList *mergeSongLinkedListsById(SongNodeList *firstList, SongNodeList *se
 
 // create a linked list of songs sorted by play count, and then song ID
 SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firstList, SongNodeList *secondList) {
-    // Handle null cases
     if (!firstList && !secondList)
         return nullptr;
     if (!firstList)
@@ -321,7 +318,6 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firstList, SongNodeL
     SongNodeList *head = nullptr;
     SongNodeList *tail = nullptr;
 
-    // Temp pointers for traversing the input lists
     SongNodeList *firstCurrent = firstList;
     SongNodeList *secondCurrent = secondList;
 
@@ -351,7 +347,6 @@ SongNodeList *mergeSongLinkedListsByPlayCount(SongNodeList *firstList, SongNodeL
                 }
             }
 
-            // Add the new node to our result list
             if (!head) {
                 head = tail = newNode;
             } else {
@@ -401,7 +396,6 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         return StatusType::INVALID_INPUT;
     }
 
-    // Find playlists
     AVLPlaylist *playlistOneNode = playlist->search(playlist, playlistId1);
     AVLPlaylist *playlistTwoNode = playlist->search(playlist, playlistId2);
     if (!playlistOneNode || !playlistTwoNode) {
@@ -411,9 +405,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
     Playlist *playlistOne = playlistOneNode->playlist_ptr;
     Playlist *playlistTwo = playlistTwoNode->playlist_ptr;
 
-    // Handle empty playlists
     if (playlistTwo->getNumOfSongs() == 0) {
-        // Nothing to merge, playlist2 is empty
         this->playlist = this->playlist->deleteNode(this->playlist, playlistId2);
         return StatusType::SUCCESS;
     } else if (playlistOne->getNumOfSongs() == 0) {
@@ -446,6 +438,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
             SongNodeList *tail = nullptr;
 
             try {
+                // Deep copy the song list
                 SongNodeList *current = playlist2Songs;
                 while (current) {
                     SongNodeList *newNode = new SongNodeList(current->songPtr);
@@ -459,7 +452,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
                     current = current->next;
                 }
 
-                // Set the linked list head and tail
+                // Update playlist1 with new list
                 playlistOne->setListHead(head);
                 playlistOne->setListTail(tail);
 
@@ -487,7 +480,6 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         }
     }
 
-    // Both playlists have songs - need to merge
     SongNodeList *playlistOneByIdLinkedList = nullptr;
     SongNodeList *playlistTwoByIdLinkedList = nullptr;
     SongNodeList *playlistOneByPlayCountLinkedList = nullptr;
@@ -506,7 +498,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         playlistTwoByIdLinkedList = playlistTwo->getSongsByIdTree()->toLinkedList();
 
         if (!playlistOneByIdLinkedList && !playlistTwoByIdLinkedList) {
-            return StatusType::SUCCESS; // Both lists are empty
+            return StatusType::SUCCESS;
         }
 
         // Merge arrays by song ID
@@ -528,13 +520,11 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         playlistOneByPlayCountLinkedList = playlistOne->getAVLPlayCount()->toLinkedList();
         playlistTwoByPlayCountLinkedList = playlistTwo->getAVLPlayCount()->toLinkedList();
 
-        // Merge arrays by play count
         mergedSongsByPlayCount = mergeSongLinkedListsByPlayCount(playlistOneByPlayCountLinkedList,
                                                                  playlistTwoByPlayCountLinkedList);
 
         // Create new play count tree
         newSongsByPlayCountTree = new PlayCountNode(newSongsAmount);
-        // Make a copy of the merged list pointer, since it'll be modified during populateCountNodeTree
         SongNodeList *tempPlayCountList = mergedSongsByPlayCount;
         newSongsByPlayCountTree->populateCountNodeTree(tempPlayCountList);
 
@@ -547,7 +537,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         // Clean up existing list in playlist1
         cleanupLinkedList(oldSongsList);
 
-        // Update playlist1's data structures
+        // Update playlist1's data structures with new merged structures
         playlistOne->setSongsByIdTree(newSongsByIdTree);
         playlistOne->setAVLPlayCount(newSongsByPlayCountTree);
         playlistOne->setNumOfSongs(newSongsAmount);
@@ -561,7 +551,7 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         cleanupLinkedList(playlistTwoByPlayCountLinkedList);
         cleanupLinkedList(mergedSongsByPlayCount);
 
-        // Note: we don't clean up mergedSongsById because it's now owned by playlistOne
+        // Note: mergedSongsById is now owned by playlistOne, so we don't free it
 
         // Remove playlist2 from the tree
         this->playlist = this->playlist->deleteNode(this->playlist, playlistId2);
@@ -569,7 +559,6 @@ StatusType DSpotify::unite_playlists(int playlistId1, int playlistId2) {
         return StatusType::SUCCESS;
     }
     catch (const std::bad_alloc &exc) {
-        // Clean up any allocated memory before returning error
         cleanupLinkedList(playlistOneByIdLinkedList);
         cleanupLinkedList(playlistTwoByIdLinkedList);
         cleanupLinkedList(playlistOneByPlayCountLinkedList);

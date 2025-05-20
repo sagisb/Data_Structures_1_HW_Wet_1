@@ -3,6 +3,21 @@
 AVLAllSongs::AVLAllSongs(int songId, Song *s) : songId(songId), song_ptr(s), left(nullptr),
                                                 right(nullptr), height(1) {}
 
+AVLAllSongs::AVLAllSongs(int songId, int played = 0) : songId(songId),
+                                                       song_ptr(new Song(songId, played)),
+                                                       left(nullptr),
+                                                       right(nullptr),
+                                                       height(1) {}
+
+AVLAllSongs::~AVLAllSongs() {
+    delete song_ptr;
+    song_ptr = nullptr;
+    delete left;
+    left = nullptr;
+    delete right;
+    right = nullptr;
+}
+
 int AVLAllSongs::getHeight(AVLAllSongs *node) const {
     return (node == nullptr) ? 0 : node->height;
 }
@@ -52,11 +67,9 @@ AVLAllSongs *AVLAllSongs::insert(AVLAllSongs *root, int key, Song *song) {
 
     if (key < root->songId) {
         root->left = insert(root->left, key, song);
-    }
-    else if (key > root->songId) {
+    } else if (key > root->songId) {
         root->right = insert(root->right, key, song);
-    }
-    else {
+    } else {
         return root;
     }
 
@@ -89,11 +102,9 @@ AVLAllSongs *AVLAllSongs::search(AVLAllSongs *root, int key) const {
     if (root == nullptr || root->songId == key) {
         return root;
     }
-
     if (key < root->songId) {
         return search(root->left, key);
-    }
-    else {
+    } else {
         return search(root->right, key);
     }
 }
@@ -105,3 +116,81 @@ void AVLAllSongs::destroyAVLTree(AVLAllSongs *root) {
         delete root;
     }
 }
+
+
+AVLAllSongs *AVLAllSongs::getMinValueNode(AVLAllSongs *node) {
+    AVLAllSongs *current = node;
+    while (current && current->left != nullptr)
+        current = current->left;
+    return current;
+}
+
+AVLAllSongs *AVLAllSongs::deleteNode(AVLAllSongs *root, int songId) {
+    if (!root) return nullptr;
+
+    if (songId < root->songId) {
+        root->left = deleteNode(root->left, songId);
+    } else if (songId > root->songId) {
+        root->right = deleteNode(root->right, songId);
+    } else {
+        if (!root->left || !root->right) {
+            AVLAllSongs *temp = root->left ? root->left : root->right;
+            root->left = root->right = nullptr;
+            delete root;
+            return temp;
+        } else {
+            AVLAllSongs *successor = getMinValueNode(root->right);
+            root->songId = successor->songId;
+
+            delete root->song_ptr;
+            root->song_ptr = successor->song_ptr;
+            successor->song_ptr = nullptr;
+
+            root->right = deleteNode(root->right, successor->songId);
+        }
+    }
+
+    updateHeight(root);
+    int balance = getBalanceFactor(root);
+
+    if (balance > 1 && getBalanceFactor(root->left) >= 0)
+        return rotateRight(root);
+    if (balance > 1 && getBalanceFactor(root->left) < 0) {
+        root->left = rotateLeft(root->left);
+        return rotateRight(root);
+    }
+    if (balance < -1 && getBalanceFactor(root->right) <= 0)
+        return rotateLeft(root);
+    if (balance < -1 && getBalanceFactor(root->right) > 0) {
+        root->right = rotateRight(root->right);
+        return rotateLeft(root);
+    }
+
+    return root;
+}
+
+/* void AVLAllSongs::removeNode(int removedSongId) {
+    AVLAllSongs *newRoot = deleteNode(this, removedSongId);
+
+    if (newRoot != this) {
+        if (newRoot) {
+            this->songId = newRoot->songId;
+            this->song_ptr = newRoot->song_ptr;
+            this->left = newRoot->left;
+            this->right = newRoot->right;
+            this->height = newRoot->height;
+
+            newRoot->song_ptr = nullptr;
+            newRoot->left = newRoot->right = nullptr;
+            delete newRoot;
+        } else {
+
+            delete this->song_ptr;
+            this->song_ptr = nullptr;
+            this->left = this->right = nullptr;
+            this->height = 0;
+            this->songId = -1;
+        }
+    }
+} */
+

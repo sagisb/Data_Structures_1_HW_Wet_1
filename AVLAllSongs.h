@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Song.h"
 
 struct AVLAllSongs {
@@ -10,14 +12,30 @@ public:
 
     AVLAllSongs(int songId, Song *s);
 
+    AVLAllSongs(int songId, int played);
+
+    ~AVLAllSongs();
+
     AVLAllSongs *rotateRight(AVLAllSongs *y);
+
     AVLAllSongs *rotateLeft(AVLAllSongs *x);
+
     AVLAllSongs *insert(AVLAllSongs *root, int key, Song *song);
+
     AVLAllSongs *search(AVLAllSongs *root, int key) const;
+
+    void removeNode(int removedSongId);
+
     void destroyAVLTree(AVLAllSongs *root);
 
 private:
     int getHeight(AVLAllSongs *node) const;
+
     int getBalanceFactor(AVLAllSongs *node) const;
+
     void updateHeight(AVLAllSongs *node);
+
+    AVLAllSongs *getMinValueNode(AVLAllSongs *node);
+public:
+    AVLAllSongs *deleteNode(AVLAllSongs *root, int songId);
 };

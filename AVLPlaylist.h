@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Playlist.h"
 
 struct AVLPlaylist {
@@ -8,16 +10,32 @@ public:
     AVLPlaylist *right;
     int height;
 
-    AVLPlaylist(int songId, Song *s);
+    explicit AVLPlaylist(int playlistId);
+
+    ~AVLPlaylist();
 
     AVLPlaylist *rotateRight(AVLPlaylist *y);
+
     AVLPlaylist *rotateLeft(AVLPlaylist *x);
-    AVLPlaylist *insert(AVLPlaylist *root, int key, Song *song);
+
+    AVLPlaylist *insert(AVLPlaylist *currentRoot, int keyId);
+
     AVLPlaylist *search(AVLPlaylist *root, int key) const;
+
     void destroyAVLTree(AVLPlaylist *root);
+
+    bool playlistExists(AVLPlaylist *current_root, int searchId) const;
+
+    AVLPlaylist *deleteNode(AVLPlaylist *current_root, int key_to_delete);
+
+    void setPlaylist(Playlist *newPlaylistPtr);
 
 private:
     int getHeight(AVLPlaylist *node) const;
+
     int getBalanceFactor(AVLPlaylist *node) const;
+
     void updateHeight(AVLPlaylist *node);
+
+    AVLPlaylist *getMinValueNode(AVLPlaylist *node);
 };

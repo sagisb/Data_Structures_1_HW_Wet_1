@@ -1,3 +1,5 @@
+#pragma once
+
 class Song {
 private:
     int songId;
@@ -5,7 +7,7 @@ private:
     int countConnectionPlaylist;
 
 public:
-    Song(int songId);
+    Song(int songId, int played);
 
     int getSongId() const;
     int getCountPlayed() const;

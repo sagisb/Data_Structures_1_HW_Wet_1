@@ -84,7 +84,7 @@ PlayCountNode::PlayCountNode(int nodesAmount) {
 }
 
 void PlayCountNode::populateCountNodeTree(SongNodeList *&songsList) {
-    if (!this || !songsList) {
+    if (!songsList) {
         return;
     }
 

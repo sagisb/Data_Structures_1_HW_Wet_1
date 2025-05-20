@@ -36,6 +36,6 @@ private:
     void updateHeight(AVLAllSongs *node);
 
     AVLAllSongs *getMinValueNode(AVLAllSongs *node);
-
+public:
     AVLAllSongs *deleteNode(AVLAllSongs *root, int songId);
 };

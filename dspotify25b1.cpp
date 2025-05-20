@@ -113,11 +113,16 @@ StatusType DSpotify::delete_song(int songId) {
         return StatusType::INVALID_INPUT;
     }
 
-    AVLAllSongs *songToRemove = this->songs->search(this->songs, songId);
-    if (songToRemove == nullptr || songToRemove->song_ptr->getCountPlaylist() > 0) {
+    if (!this->songs) {
         return StatusType::FAILURE;
     }
-    this->songs->removeNode(songId); // TODO: implement
+    AVLAllSongs *songNodeInTree = this->songs->search(this->songs, songId);
+    if (!songNodeInTree || (songNodeInTree->song_ptr && songNodeInTree->song_ptr->getCountPlaylist() > 0)) {
+        return StatusType::FAILURE;
+    }
+
+    this->songs = this->songs->deleteNode(this->songs, songId); // deleteNode is now public/wrapper
+    // and it correctly returns the new root
     return StatusType::SUCCESS;
 }
 

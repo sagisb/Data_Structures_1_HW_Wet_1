@@ -169,7 +169,7 @@ AVLAllSongs *AVLAllSongs::deleteNode(AVLAllSongs *root, int songId) {
     return root;
 }
 
-void AVLAllSongs::removeNode(int removedSongId) {
+/* void AVLAllSongs::removeNode(int removedSongId) {
     AVLAllSongs *newRoot = deleteNode(this, removedSongId);
 
     if (newRoot != this) {
@@ -192,4 +192,5 @@ void AVLAllSongs::removeNode(int removedSongId) {
             this->songId = -1;
         }
     }
-}
+} */
+

@@ -1,0 +1,220 @@
+# DSpotify - Music Playlist Management System
+
+A data structures implementation of a music streaming service playlist management system using AVL trees and linked lists.
+
+## Overview
+
+This project implements a music playlist management system called "DSpotify" that allows users to:
+
+-   Create and manage playlists
+-   Add/remove songs from playlists
+-   Merge playlists
+-   Query songs by play count
+-   Track song statistics
+
+The system uses AVL trees for efficient storage and retrieval of playlists and songs, with linked lists for maintaining song order within playlists.
+
+## Assignment Documentation
+
+-   **Assignment Specification**: [`DS_wet1_Spring_2025.pdf`](DS_wet1_Spring_2025.pdf) - Complete assignment requirements and specifications
+-   **Solution Analysis**: [`dry_part_submission.pdf`](dry_part_submission.pdf) - Detailed explanation of the solution approach, data structure design decisions, and complexity analysis
+
+## Project Structure
+
+```
+├── dspotify25b1.h          # Main DSpotify class header
+├── dspotify25b1.cpp        # Main DSpotify class implementation
+├── AVLPlaylist.h/.cpp      # AVL tree for playlist management
+├── AVLAllSongs.h/.cpp      # AVL tree for global song storage
+├── Playlist.h/.cpp         # Playlist data structure
+├── Song.h/.cpp             # Song data structure
+├── SongTreePlaylist.h/.cpp # AVL tree for songs within playlists
+├── wet1util.h              # Utility definitions and types
+├── main25b1.cpp            # Main executable entry point
+├── CMakeLists.txt          # CMake build configuration
+├── DS_wet1_Spring_2025.pdf # Assignment specification and requirements
+├── dry_part_submission.pdf # Solution analysis and design documentation
+├── tests/                  # Test files and expected outputs
+└── run_tests.py            # Test runner script
+```
+
+## Key Features
+
+### Core Operations
+
+-   **Playlist Management**: Create, delete, and manage playlists
+-   **Song Management**: Add songs to the system and manage their metadata
+-   **Playlist Operations**: Add/remove songs from playlists
+-   **Playlist Merging**: Unite two playlists while handling duplicates
+-   **Query Operations**: Get song play counts and find songs by play count
+
+## Data Structures Implemented
+
+### 1. AVL Trees
+
+#### AVLPlaylist
+
+-   **Purpose**: Manages all playlists in the system using a balanced binary search tree
+-   **Key**: Playlist ID
+-   **Operations**: Insert, delete, search playlists
+-   **Time Complexity**: O(log n) for all operations
+-   **Features**:
+    -   Self-balancing with height tracking
+    -   Rotation operations (left, right, left-right, right-left)
+    -   Memory management with proper cleanup
+
+#### AVLAllSongs
+
+-   **Purpose**: Global storage for all songs in the system
+-   **Key**: Song ID
+-   **Operations**: Insert, delete, search songs
+-   **Time Complexity**: O(log n) for all operations
+-   **Features**:
+    -   Maintains a single instance of each song
+    -   Reference counting for playlist membership
+    -   Prevents duplicate songs in the system
+
+#### SongTreePlaylist
+
+-   **Purpose**: AVL tree for songs within a specific playlist, organized by song ID
+-   **Key**: Song ID
+-   **Operations**: Add, remove, search songs within playlist
+-   **Time Complexity**: O(log n) for all operations
+-   **Features**:
+    -   Links to corresponding nodes in the playlist's linked list
+    -   Maintains playlist-specific song organization
+    -   Supports conversion to linked list for merging operations
+
+#### PlayCountNode (AVL Tree)
+
+-   **Purpose**: AVL tree for songs within a playlist, organized by play count
+-   **Key**: Play count (with song ID as secondary key for ties)
+-   **Operations**: Insert, delete, search by play count
+-   **Time Complexity**: O(log n) for all operations
+-   **Features**:
+    -   Enables efficient queries for songs by play count
+    -   Handles ties by using song ID as secondary sorting criterion
+    -   Supports range queries and nearest-neighbor searches
+
+### 2. Linked Lists
+
+#### SongNodeList
+
+-   **Purpose**: Doubly-linked list maintaining song order within playlists
+-   **Structure**: Each node contains a pointer to a Song object and prev/next pointers
+-   **Operations**: Insert, remove, traverse
+-   **Time Complexity**: O(1) for insertion/removal at known positions, O(n) for search
+-   **Features**:
+    -   Maintains insertion order of songs in playlists
+    -   Bidirectional traversal for efficient operations
+    -   Memory-safe with proper cleanup
+
+### 3. Composite Data Structures
+
+#### Playlist
+
+-   **Purpose**: Container that combines multiple data structures for playlist management
+-   **Components**:
+    -   `SongTreePlaylist`: Songs organized by ID for O(log n) access
+    -   `PlayCountNode`: Songs organized by play count for efficient queries
+    -   `SongNodeList`: Doubly-linked list maintaining song order
+-   **Operations**: Add song, remove song, play song, query operations
+-   **Features**:
+    -   Multiple views of the same data for different access patterns
+    -   Synchronized updates across all data structures
+    -   Efficient support for both ID-based and play-count-based operations
+
+### 4. Reference Counting System
+
+#### Song Class
+
+-   **Purpose**: Represents individual songs with metadata and reference tracking
+-   **Fields**:
+    -   `songId`: Unique identifier
+    -   `countPlayed`: Number of times the song has been played
+    -   `countConnectionPlaylist`: Number of playlists containing this song
+-   **Operations**: Increment/decrement play count, manage playlist references
+-   **Features**:
+    -   Prevents deletion of songs still referenced by playlists
+    -   Tracks usage across multiple playlists
+    -   Memory-safe with proper reference management
+
+### 5. Memory Management Features
+
+-   **Exception Safety**: Proper cleanup even when exceptions occur
+-   **Deep Copying**: Safe copying of complex data structures during merging
+-   **Circular Reference Prevention**: Careful management of pointers to prevent memory leaks
+
+## Time Complexities
+
+| Operation              | Time Complexity | Description                     |
+| ---------------------- | --------------- | ------------------------------- |
+| `add_playlist`         | O(log n)        | Insert into AVL tree            |
+| `delete_playlist`      | O(log n)        | Delete from AVL tree            |
+| `add_song`             | O(log n)        | Insert into AVL tree            |
+| `add_to_playlist`      | O(log n)        | Insert into playlist's AVL tree |
+| `delete_song`          | O(log n)        | Delete from AVL tree            |
+| `remove_from_playlist` | O(log n)        | Remove from playlist's AVL tree |
+| `get_plays`            | O(log n)        | Search in AVL tree              |
+| `get_num_songs`        | O(1)            | Return stored count             |
+| `get_by_plays`         | O(log n)        | Search in play count AVL tree   |
+| `unite_playlists`      | O(n + m)        | Merge two playlists             |
+
+Where n is the number of playlists/songs in the system.
+
+## Building and Running
+
+### Prerequisites
+
+-   CMake 3.28 or higher
+-   C++14 compatible compiler
+-   Make or Ninja build system
+
+### Build Instructions
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+./run_tests.py
+
+# Run specific test
+./run_tests.py test10
+
+# Check for memory leaks with Valgrind
+./check_valgrind.sh
+```
+
+## Implementation Details
+
+### Memory Management
+
+-   Uses reference counting to track song usage across playlists
+-   Proper cleanup of linked lists and AVL trees
+-   Exception-safe resource management with RAII
+
+### Duplicate Handling
+
+-   When merging playlists, duplicate songs are handled efficiently
+-   Reference counts are properly decremented for merged songs
+-   Only one copy of each song is maintained in the merged playlist
+
+### Error Handling
+
+-   Comprehensive input validation
+-   Proper error codes for different failure scenarios
+-   Memory allocation error handling
+
+## Course Information
+
+-   **Course**: 234218 Data Structures 1
+-   **Semester**: 2025B (Spring)
+-   **Exercise**: Wet Exercise #1
+-   **Institution**: Technion - Israel Institute of Technology

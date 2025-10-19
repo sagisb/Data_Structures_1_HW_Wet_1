@@ -1,0 +1,11 @@
+add_playlist 698634
+get_num_songs 698634
+add_song 1026107 110
+add_to_playlist 698634 1026107
+get_num_songs 698634
+remove_from_playlist 698634 1026107
+get_num_songs 698634
+add_to_playlist 698634 1026107
+remove_from_playlist 698634 1026107
+add_to_playlist 698634 1026107
+add_song 130426 102

@@ -22,20 +22,21 @@ The system uses AVL trees for efficient storage and retrieval of playlists and s
 ## Project Structure
 
 ```
-├── dspotify25b1.h          # Main DSpotify class header
-├── dspotify25b1.cpp        # Main DSpotify class implementation
-├── AVLPlaylist.h/.cpp      # AVL tree for playlist management
-├── AVLAllSongs.h/.cpp      # AVL tree for global song storage
-├── Playlist.h/.cpp         # Playlist data structure
-├── Song.h/.cpp             # Song data structure
-├── SongTreePlaylist.h/.cpp # AVL tree for songs within playlists
-├── wet1util.h              # Utility definitions and types
-├── main25b1.cpp            # Main executable entry point
-├── CMakeLists.txt          # CMake build configuration
-├── DS_wet1_Spring_2025.pdf # Assignment specification and requirements
-├── dry_part_submission.pdf # Solution analysis and design documentation
-├── tests/                  # Test files and expected outputs
-└── run_tests.py            # Test runner script
+wet_1/
+├── dspotify25b1.h              # Main DSpotify class header
+├── dspotify25b1.cpp            # Main DSpotify class implementation
+├── AVLPlaylist.h/.cpp          # AVL tree for playlist management
+├── AVLAllSongs.h/.cpp          # AVL tree for global song storage
+├── Playlist.h/.cpp             # Playlist data structure
+├── Song.h/.cpp                 # Song data structure
+├── SongTreePlaylist.h/.cpp     # AVL tree for songs within playlists
+├── wet1util.h                  # Utility definitions and types
+├── main25b1.cpp                # Main executable entry point
+├── CMakeLists.txt              # CMake build configuration
+├── DS_wet1_Spring_2025.pdf     # Assignment specification and requirements
+├── dry_part_submission.pdf     # Solution analysis and design documentation
+├── tests/                      # Test files and expected outputs
+└── run_tests.py                # Test runner script
 ```
 
 ## Key Features

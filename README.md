@@ -148,20 +148,26 @@ wet_1/
 
 ## Time Complexities
 
-| Operation              | Time Complexity | Description                     |
-| ---------------------- | --------------- | ------------------------------- |
-| `add_playlist`         | O(log n)        | Insert into AVL tree            |
-| `delete_playlist`      | O(log n)        | Delete from AVL tree            |
-| `add_song`             | O(log n)        | Insert into AVL tree            |
-| `add_to_playlist`      | O(log n)        | Insert into playlist's AVL tree |
-| `delete_song`          | O(log n)        | Delete from AVL tree            |
-| `remove_from_playlist` | O(log n)        | Remove from playlist's AVL tree |
-| `get_plays`            | O(log n)        | Search in AVL tree              |
-| `get_num_songs`        | O(1)            | Return stored count             |
-| `get_by_plays`         | O(log n)        | Search in play count AVL tree   |
-| `unite_playlists`      | O(n + m)        | Merge two playlists             |
+Notation:
 
-Where n is the number of playlists/songs in the system.
+-   n = number of songs in the system
+-   m = number of playlists in the system
+-   k = number of songs in the specific playlist
+
+| Operation              | Time Complexity     | Description                                     |
+| ---------------------- | ------------------- | ----------------------------------------------- |
+| `DSpotify()`           | O(1)                | Initialize empty structures                     |
+| `~DSpotify()`          | O(n · m) worst case | Free all structures and per-playlist contents   |
+| `add_playlist`         | O(log m)            | Insert playlist into playlists AVL              |
+| `delete_playlist`      | O(log m)            | Remove empty playlist from AVL                  |
+| `add_song`             | O(log n)            | Insert song into global songs AVL               |
+| `delete_song`          | O(log n)            | Remove song (if not in any playlist)            |
+| `add_to_playlist`      | O(log n + log m)    | Locate song, locate playlist, insert into trees |
+| `remove_from_playlist` | O(log m + log k)    | Locate song, locate playlist, remove from trees |
+| `get_plays`            | O(log n)            | Query song by ID                                |
+| `get_num_songs`        | O(log m)            | Locate playlist and return its size             |
+| `get_by_plays`         | O(log m + log k)    | Find by plays within a playlist                 |
+| `unite_playlists`      | O(log (m) + n)      | Merge two playlists (sizes k1 and k2)           |
 
 ## Building and Running
 
